@@ -109,12 +109,16 @@
     const f = e.target.files[0]; if (!f) return;
     carregar(true, "A enviar " + f.name + "…");
     try {
-      const b = new Uint8Array(await lerFicheiro(f));
-      const b64 = HWT.paraBase64(b);
-      const envio = res(N.instalar(f.name, b64), "Enviado para o relógio. Veja o progresso na notificação.");
+      let b64 = HWT.paraBase64(new Uint8Array(await lerFicheiro(f)));
+      let nome = f.name.replace(/\.(hwt|zip)$/i, "").replace(/\.hwt$/i, ""), capa = "", pac = null;
+      try {
+        pac = await HWT.abrir(f);
+        nome = pac.titulo || nome;
+        capa = await capaDoHwt(pac);
+        b64 = HWT.paraBase64(pac.bytes); // se vinha dentro de um .zip, vai só a máscara
+      } catch (err) { /* não é máscara: segue tal e qual */ }
+      const envio = res(N.instalar(nome + ".hwt", b64), "Enviado para o relógio. Veja o progresso na notificação.");
       if (envio && envio.ok) {
-        let nome = f.name.replace(/\.hwt$/i, ""), capa = "";
-        try { const pac = await HWT.abrir(f); nome = pac.titulo || nome; capa = await capaDoHwt(pac); } catch (err) { /* não é .hwt */ }
         await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa }, b64);
         toast("Guardada na biblioteca: " + nome);
       }
