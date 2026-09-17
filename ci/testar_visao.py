@@ -23,7 +23,8 @@ PEDIDO = (
 
 def chamar(caminho, corpo):
     req = urllib.request.Request(U + caminho, data=json.dumps(corpo).encode(),
-                                 headers={"content-type": "application/json"})
+                                 headers={"content-type": "application/json",
+                                          "user-agent": "Mozilla/5.0 (GT3 Melo CI)"})
     try:
         with urllib.request.urlopen(req, timeout=120) as r:
             return r.read().decode()[:1200]
