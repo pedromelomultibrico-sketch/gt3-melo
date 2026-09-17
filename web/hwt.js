@@ -206,6 +206,21 @@
     return melhor;
   }
 
+  /**
+   * A imagem do ecrã sempre ligado: grande, mas com poucos píxeis acesos
+   * (a Huawei guarda-a assim para poupar bateria). Devolve -1 se não existir.
+   */
+  function indiceAod(pacote, exceto) {
+    let melhor = -1, area = 0;
+    pacote.imgs.forEach((im, i) => {
+      if (i === exceto || Math.min(im.largura, im.altura) < 200) return;
+      if (im.opacidade === undefined) im.opacidade = opacidade(descodificar(pacote.bin, im));
+      const a = im.largura * im.altura;
+      if (im.opacidade <= 0.6 && a > area) { area = a; melhor = i; }
+    });
+    return melhor;
+  }
+
   /** Troca a imagem `indice` pelo conteúdo do canvas e devolve o .hwt novo (Uint8Array). */
   async function construir(pacote, indice, canvasFonte, nome, capa) {
     const im = pacote.imgs[indice];
