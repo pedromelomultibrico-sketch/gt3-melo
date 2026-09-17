@@ -92,6 +92,23 @@ public class PonteNucleo {
         return BuildConfig.VERSION_NAME;
     }
 
+    /** Histórico da bateria do relógio: [[instante em segundos, nível], ...]. */
+    @JavascriptInterface
+    public String bateriaHistorico(int dias) {
+        GBDevice d = relogio();
+        if (d == null) return SEM;
+        try (DBHandler db = GBApplication.acquireDB()) {
+            long agora = System.currentTimeMillis();
+            long desde = agora - (long) Math.max(1, dias) * 86400000L;
+            List<BatteryLevel> l = new BatteryLevelProvider(d, db.getDaoSession()).getAllSamples(0, desde, agora);
+            JSONArray arr = new JSONArray();
+            for (BatteryLevel b : l) arr.put(new JSONArray().put(b.getTimestamp()).put(b.getLevel()));
+            return new JSONObject().put("ok", true).put("amostras", arr).toString();
+        } catch (Exception e) {
+            return erro(e);
+        }
+    }
+
     // ---------- máscaras guardadas no telemóvel ----------
 
     /** Já pode ler a pasta Transferências? */
