@@ -21,18 +21,18 @@ PEDIDO = (
 )
 
 
+import subprocess, tempfile
+
+
 def chamar(caminho, corpo):
-    req = urllib.request.Request(U + caminho, data=json.dumps(corpo).encode(),
-                                 headers={"content-type": "application/json",
-                                          "user-agent": "Mozilla/5.0 (GT3 Melo CI)"})
-    try:
-        with urllib.request.urlopen(req, timeout=120) as r:
-            return r.read().decode()[:1200]
-    except Exception as e:
-        try:
-            return e.read().decode()[:600]
-        except Exception:
-            return "erro: " + str(e)
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        json.dump(corpo, f)
+        nome = f.name
+    r = subprocess.run(["curl", "-s", "--max-time", "180", "-X", "POST",
+                        "-H", "content-type: application/json",
+                        "--data-binary", "@" + nome, U + caminho],
+                       capture_output=True, text=True)
+    return (r.stdout or r.stderr)[:1200]
 
 
 mensagens = [{"role": "user", "content": [
