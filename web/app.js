@@ -322,7 +322,10 @@
         mini.append(fig);
       });
       const fundo = pacoteHwt.imgs[alvoHwt];
-      $("#hwtInfo").innerHTML = `Base: <b>${pacoteHwt.titulo}</b> ${pacoteHwt.screen ? "(" + pacoteHwt.screen + ")" : ""}<br>${pacoteHwt.imgs.length} imagens. A trocar (dourada): ${fundo ? fundo.largura + "×" + fundo.altura : "nenhuma"} — toque noutra para mudar.`;
+      const aviso = alvoHwt < 0
+        ? "<br>⚠ Esta base não tem fundo principal para substituir (só sobreposições). Escolha outra máscara."
+        : "";
+      $("#hwtInfo").innerHTML = `Base: <b>${pacoteHwt.titulo}</b> ${pacoteHwt.screen ? "(" + pacoteHwt.screen + ")" : ""}<br>${pacoteHwt.imgs.length} imagens. A trocar (dourada): ${fundo ? fundo.largura + "×" + fundo.altura : "nenhuma"} — toque noutra para mudar.${aviso}`;
       $("#btEnviarRelogio").disabled = $("#btGuardarHwt").disabled = alvoHwt < 0;
     } catch (err) { pacoteHwt = null; $("#hwtInfo").textContent = "⚠ " + err.message; $("#btEnviarRelogio").disabled = $("#btGuardarHwt").disabled = true; }
     finally { carregar(false); e.target.value = ""; }
