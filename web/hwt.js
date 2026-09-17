@@ -245,21 +245,28 @@
     return empacotar(pacote, bin, nome, capa, bitsMin);
   }
 
+  /**
+   * Prepara o desenho como ele vai ficar dentro do ficheiro: recortado em círculo,
+   * sobre fundo preto. Serve também para medir se cabe, antes de montar tudo.
+   */
+  function prepararDesenho(canvasFonte, largura, altura) {
+    const c = document.createElement("canvas");
+    c.width = largura; c.height = altura;
+    const ctx = c.getContext("2d");
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(largura / 2, altura / 2, Math.min(largura, altura) / 2, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, largura, altura);
+    ctx.drawImage(canvasFonte, 0, 0, largura, altura);
+    ctx.restore();
+    return ctx.getImageData(0, 0, largura, altura).data;
+  }
+
   /** Codifica um desenho para caber, byte a byte, no espaço da imagem indicada. */
   function trocarImagem(pacote, indice, canvasFonte) {
     const im = pacote.imgs[indice];
-    const c = document.createElement("canvas");
-    c.width = im.largura; c.height = im.altura;
-    const ctx = c.getContext("2d");
-    // o mostrador é redondo: fora do círculo fica transparente, como no original
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(c.width / 2, c.height / 2, Math.min(c.width, c.height) / 2, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, c.width, c.height);
-    ctx.drawImage(canvasFonte, 0, 0, c.width, c.height);
-    ctx.restore();
-    const px = ctx.getImageData(0, 0, c.width, c.height).data;
+    const px = prepararDesenho(canvasFonte, im.largura, im.altura);
     const alvo = im.fim - im.dados;
     const cod = codificarExato(px, alvo);
     if (!cod) throw new Error("o desenho tem demasiado detalhe para caber no espaço desta base (" + Math.round(alvo / 1024) + " KB). Use uma base com fundo em fotografia ou simplifique o fundo.");
