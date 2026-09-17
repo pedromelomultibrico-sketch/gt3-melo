@@ -464,10 +464,21 @@
       el.innerHTML = "";
       if (!itens.length) el.innerHTML = '<p class="suave pequeno">Ainda não guardou nenhuma máscara.</p>';
       if (!janelaReparacao) { janelaReparacao = true; setTimeout(() => { janelaReparacao = false; repararCapas(itens); }, 300); }
+      itens.sort((a, b) => {
+        const oa = a.ordem === undefined ? 1e9 : a.ordem, ob = b.ordem === undefined ? 1e9 : b.ordem;
+        return oa !== ob ? oa - ob : (b.alterada || 0) - (a.alterada || 0);
+      });
       itens.forEach((m) => {
-        if (m.ficheiro) { el.append(miniatura(m, () => mostrarAcoes(m, null))); return; }
-        const n = Estudio.normalizar(m); n.id = m.id; n.origem = m.origem; n.alterada = m.alterada;
-        el.append(miniatura(n, () => mostrarAcoes(n, () => abrirEditor(n))));
+        let b;
+        if (m.ficheiro) {
+          b = miniatura(m, () => mostrarAcoes(m, null));
+          toqueLongo(b, () => mostrarOrganizar(m, itens));
+        } else {
+          const n = Estudio.normalizar(m); n.id = m.id; n.origem = m.origem; n.alterada = m.alterada; n.ordem = m.ordem;
+          b = miniatura(n, () => mostrarAcoes(n, () => abrirEditor(n)));
+          toqueLongo(b, () => mostrarOrganizar(n, itens));
+        }
+        el.append(b);
       });
     } catch (e) { el.innerHTML = '<p class="suave pequeno">Sem ligação à biblioteca.</p>'; }
   }
