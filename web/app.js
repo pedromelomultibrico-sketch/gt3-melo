@@ -239,7 +239,7 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
   };
 
   // ---------- editor ----------
-  let m = null, sel = null, tick = null, pacoteHwt = null, alvoHwt = -1;
+  let m = null, mPrincipal = null, variante = "normal", sel = null, tick = null, pacoteHwt = null, alvoHwt = -1, alvoAod = -1;
   const tela = $("#tela");
   function redesenhar() { if (m) Estudio.desenhar(tela, m, { estado: { ...estado, data: new Date() }, selecionada: sel, redesenhar }); }
 
