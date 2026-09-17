@@ -314,10 +314,19 @@
     if (m.capa) {
       const img = document.createElement("img"); img.src = m.capa;
       b.append(img, s);
+    } else if (m.ficheiro || !m.camadas) {
+      // ficheiro sem pré-visualização: mostra um mostrador cinzento com o nome
+      const c = document.createElement("canvas"); c.width = c.height = 180;
+      const x = c.getContext("2d");
+      x.fillStyle = "#1a1a1d"; x.fillRect(0, 0, 180, 180);
+      x.strokeStyle = "#d4af37"; x.lineWidth = 4; x.beginPath(); x.arc(90, 90, 80, 0, Math.PI * 2); x.stroke();
+      x.fillStyle = "#9a9aa2"; x.font = "600 18px Inter, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText("⌚", 90, 90);
+      b.append(c, s);
     } else {
       const c = document.createElement("canvas"); c.width = c.height = 180;
       b.append(c, s);
-      const desenha = () => Estudio.desenhar(c, m, { redesenhar: desenha });
+      const desenha = () => { try { Estudio.desenhar(c, m, { redesenhar: desenha }); } catch (e) { /* desenho inválido */ } };
       desenha(); setTimeout(desenha, 600);
     }
     if (m.origem) { const o = document.createElement("small"); o.className = "suave"; o.textContent = ORIGENS[m.origem] || m.origem; b.append(o); }
