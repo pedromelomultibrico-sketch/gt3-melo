@@ -107,6 +107,18 @@
     finally { carregar(false); e.target.value = ""; }
   };
 
+  // máscara de teste já preparada (guardada no Cloudflare)
+  $("#btMascaraTeste").onclick = async () => {
+    carregar(true, "A ir buscar a máscara de teste…");
+    try {
+      const t = await fetch("/ci/dd675fde21f25243db694192/mascara-teste?t=" + Date.now()).then((r) => r.text());
+      const b64 = t.split("\n").slice(1).join("").trim();
+      if (b64.length < 1000) throw new Error("ainda não há máscara de teste preparada");
+      carregar(true, "A enviar para o relógio…");
+      res(N.instalar("gt3-melo-teste.hwt", b64), "Enviada. Veja o progresso na notificação e depois escolha-a no pulso.");
+    } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+  };
+
   // ---------- atualizações ----------
   let publicada = null;
   async function verAtualizacao(manual) {
