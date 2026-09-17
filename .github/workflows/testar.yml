@@ -1,0 +1,21 @@
+name: Testar Worker
+on:
+  workflow_dispatch:
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Testes
+        run: |
+          U=https://gt3-melo.pedromelomultibrico.workers.dev
+          {
+          echo "== /"; curl -s -o /tmp/i.html -w "%{http_code} %{content_type} %{size_download}\n" $U/; grep -o "<title>.*</title>" /tmp/i.html
+          for p in app.js app.css hwt.js estudio.js nucleo.js api/versao; do echo "== $p"; curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}\n" $U/$p; done
+          curl -s $U/api/versao; echo
+          echo "== IA mascara"; curl -s -X POST -H 'content-type: application/json' -d '{"descricao":"preto e dourado, ponteiros finos, bateria em baixo"}' $U/api/ia/mascara | head -c 1500; echo
+          echo "== IA fundo"; curl -s -X POST -H 'content-type: application/json' -d '{"prompt":"gold carbon fiber"}' $U/api/ia/fundo | head -c 200; echo
+          echo "== mascaras"; curl -s $U/api/mascaras | head -c 300; echo
+          echo "== apk"; curl -sIL https://github.com/pedromelomultibrico-sketch/gt3-melo/releases/download/v1.2/GT3-Melo.apk | grep -iE "^HTTP|content-length" | tail -2
+          } > r.txt 2>&1
+          cat r.txt
+          curl -s -X POST --data-binary @r.txt "$U/ci/dd675fde21f25243db694192/teste"
