@@ -290,7 +290,8 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
         ] }],
       });
       const t = (r.content || []).map((c) => c.text || "").join("");
-      abrirEditor(extrairJson(t));
+      const desenho = extrairJson(t); desenho.origem = "foto";
+      abrirEditor(desenho);
       toast("Desenho lido da foto — afine no editor");
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   };
