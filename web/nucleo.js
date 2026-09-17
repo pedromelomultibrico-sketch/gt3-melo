@@ -20,9 +20,10 @@
     guardar: (nome, b64) => { const a = document.createElement("a"); a.href = "data:application/octet-stream;base64," + b64; a.download = nome; a.click(); return '{"ok":true,"caminho":"Transferências"}'; },
     ficheiroPendente: () => "",
     bateriaHistorico: () => {
+      // simulação: 0,4% por hora nos últimos 3 dias
       const agora = Math.floor(Date.now() / 1000), a = [];
-      for (let t = agora - 5 * 86400; t < agora; t += 3600) a.push([t, Math.max(5, 100 - Math.floor((agora - t) / 3600 * -0.8) - 96)]);
-      return JSON.stringify({ ok: true, amostras: a.map(([t], i) => [t, Math.max(4, 100 - i * 0.8)]) });
+      for (let h = 72; h >= 0; h--) a.push([agora - h * 3600, Math.round(76 + h * 0.4)]);
+      return JSON.stringify({ ok: true, amostras: a });
     },
     podeLerFicheiros: () => false,
     pedirAcessoFicheiros: () => '{"ok":true}',
