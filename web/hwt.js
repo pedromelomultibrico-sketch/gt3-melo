@@ -282,7 +282,7 @@
       saida.file("preview/cover.jpg", b64, { base64: true });
     }
     const bytes = await saida.generateAsync({ type: "uint8array", compression: "DEFLATE" });
-    return { bytes, bits: cod.bits };
+    return { bytes, bits };
   }
 
   function paraBase64(u8) {
