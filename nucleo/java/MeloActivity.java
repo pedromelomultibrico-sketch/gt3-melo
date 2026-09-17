@@ -134,6 +134,50 @@ public class MeloActivity extends Activity {
         web.loadUrl(URL_BASE + "?nucleo=" + BuildConfig.VERSION_CODE);
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        tratarIntent(intent);
+    }
+
+    /** Um .hwt (ou outro ficheiro) aberto de fora: guarda-o e avisa a interface. */
+    private void tratarIntent(Intent intent) {
+        if (intent == null) return;
+        Uri uri = null;
+        final String acao = intent.getAction();
+        if (Intent.ACTION_VIEW.equals(acao)) uri = intent.getData();
+        else if (Intent.ACTION_SEND.equals(acao)) uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        if (uri == null) return;
+        try {
+            final ContentResolver cr = getContentResolver();
+            String nome = uri.getLastPathSegment();
+            try (Cursor c = cr.query(uri, null, null, null, null)) {
+                if (c != null && c.moveToFirst()) {
+                    int i = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (i >= 0 && c.getString(i) != null) nome = c.getString(i);
+                }
+            } catch (Exception ignored) { }
+            final ByteArrayOutputStream out = new ByteArrayOutputStream();
+            try (InputStream in = cr.openInputStream(uri)) {
+                if (in == null) return;
+                byte[] buf = new byte[65536];
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    out.write(buf, 0, n);
+                    if (out.size() > 25 * 1024 * 1024) throw new Exception("ficheiro grande demais");
+                }
+            }
+            final JSONObject o = new JSONObject();
+            o.put("nome", nome == null ? "mascara.hwt" : nome);
+            o.put("b64", Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP));
+            ficheiroRecebido = o.toString();
+            enviarEvento("ficheiro", ficheiroRecebido);
+        } catch (Exception e) {
+            ficheiroRecebido = null;
+        }
+    }
+
     void enviarEvento(String tipo, String jsonDados) {
         if (web == null) return;
         final String js = "window.aoNucleo && window.aoNucleo(" + org.json.JSONObject.quote(tipo) + "," + jsonDados + ")";
