@@ -66,6 +66,41 @@
     if (p) tratarFicheiroRecebido(p);
   }
 
+  /**
+   * Estima quanto tempo falta, pelo ritmo de descarga dos últimos dias.
+   * Salta as subidas (carregamentos) e os buracos longos sem dados.
+   */
+  function calcularAutonomia(amostras, nivelAgora) {
+    let horas = 0, descida = 0;
+    for (let i = 1; i < amostras.length; i++) {
+      const [t0, n0] = amostras[i - 1], [t1, n1] = amostras[i];
+      const dh = (t1 - t0) / 3600;
+      if (dh <= 0 || dh > 6) continue;      // buraco: o relógio esteve fora de alcance
+      if (n1 > n0) { horas = 0; descida = 0; continue; } // esteve a carregar: recomeça
+      horas += dh; descida += n0 - n1;
+    }
+    if (horas < 3 || descida < 2) return null;            // ainda há pouca história
+    const ritmo = descida / horas;                        // % por hora
+    return { ritmo, restantes: Math.max(0, (nivelAgora >= 0 ? nivelAgora : 0) / ritmo), horasVistas: horas };
+  }
+
+  function tempoTxt(h) {
+    if (h >= 24) { const d = Math.floor(h / 24); return d + (d === 1 ? " dia e " : " dias e ") + Math.round(h - d * 24) + " h"; }
+    if (h >= 2) return Math.round(h) + " horas";
+    return Math.max(1, Math.round(h * 60)) + " minutos";
+  }
+
+  let autonomia = null;
+  function atualizarAutonomia() {
+    const el = $("#autonomia");
+    const h = N.bateriaHistorico(7);
+    if (!h || !h.ok || !h.amostras || h.amostras.length < 4) { el.textContent = ""; autonomia = null; return; }
+    autonomia = calcularAutonomia(h.amostras, estado.bateria);
+    if (!autonomia) { el.textContent = ""; return; }
+    el.textContent = "Aguenta mais ~" + tempoTxt(autonomia.restantes) + " · gasta " + autonomia.ritmo.toFixed(1).replace(".", ",") + "%/h";
+    estado.horasRestantes = autonomia.restantes;
+  }
+
   function atualizarDados() {
     mostrarDispositivo(N.dispositivos());
     const agora = new Date(), ini = new Date(agora); ini.setHours(0, 0, 0, 0);
