@@ -71,12 +71,50 @@ def links(pagina):
         return [], []
 
 
+def paginas_de_mascara(pagina):
+    """Links para as páginas de cada máscara dentro de uma listagem."""
+    try:
+        r = requests.get(pagina, headers=CAB, timeout=40)
+        if r.status_code != 200:
+            return []
+        base = "https://" + pagina.split("/")[2]
+        achados = re.findall(r'href="(https?://[^"]+|/[^"]+)"', r.text)
+        bons = []
+        for u in achados:
+            if u.startswith("/"):
+                u = base + u
+            if re.search(r"/(download|watchface|watch-face)s?/[^/]+/?$", u, re.I) and "category" not in u:
+                bons.append(u.split("?")[0])
+        return list(dict.fromkeys(bons))[:25]
+    except Exception:
+        return []
+
+
+def ficheiros_da_pagina(pagina):
+    try:
+        r = requests.get(pagina, headers=CAB, timeout=40)
+        if r.status_code != 200:
+            return []
+        base = "https://" + pagina.split("/")[2]
+        us = re.findall(r'href="([^"]+\.(?:hwt|zip))"', r.text, re.I)
+        us += re.findall(r'href="([^"]*(?:download|file)[^"]*id=\d+[^"]*)"', r.text, re.I)
+        return [u if u.startswith("http") else base + u for u in dict.fromkeys(us)][:4]
+    except Exception:
+        return []
+
+
 melhor = None
+vistos = set()
 for pagina in PAGINAS:
-    diretos, indiretas = links(pagina)
-    for u in diretos:
-        if u.startswith("/"):
-            u = "https://" + pagina.split("/")[2] + u
+    diretos, _ = links(pagina)
+    candidatos = [u if u.startswith("http") else "https://" + pagina.split("/")[2] + u for u in diretos]
+    for detalhe in paginas_de_mascara(pagina)[:14]:
+        candidatos += ficheiros_da_pagina(detalhe)
+    diz("  ficheiros a experimentar:", len(candidatos))
+    for u in candidatos[:20]:
+        if u in vistos:
+            continue
+        vistos.add(u)
         try:
             r = requests.get(u, headers=CAB, timeout=60)
             if r.status_code != 200 or len(r.content) < 20000:
@@ -86,10 +124,11 @@ for pagina in PAGINAS:
                 diz("  >>> SERVE COMO BASE:", u)
                 if melhor is None:
                     melhor = (u, r.content)
+                    break
         except Exception as e:
             diz("  ", u[:70], "erro", str(e)[:60])
-    for u in indiretas[:6]:
-        diz("  página de descarga:", u)
+    if melhor:
+        break
 
 if melhor:
     open("nucleo/base-aod.hwt", "wb").write(melhor[1])
