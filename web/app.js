@@ -280,9 +280,12 @@
   }
 
   /** Vai buscar o .hwt guardado e desenha a pré-visualização que faltava. */
+  const capasTentadas = new Set();
   async function repararCapas(itens) {
-    const semCapa = itens.filter((m) => m.ficheiro && !m.capa).slice(0, 6);
+    const semCapa = itens.filter((m) => m.ficheiro && !m.capa && !capasTentadas.has(m.id)).slice(0, 6);
+    let feitas = 0;
     for (const m of semCapa) {
+      capasTentadas.add(m.id);
       try {
         const b64 = (await fetch("/api/ficheiro/" + m.id + "?t=" + Date.now()).then((r) => r.text())).trim();
         if (b64.length < 500 || b64[0] === "{") continue;
