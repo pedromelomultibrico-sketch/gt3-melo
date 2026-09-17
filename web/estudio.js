@@ -25,6 +25,7 @@
       case "data": return { ...base, y: 300, tamanho: 30, cor: "#d4af37" };
       case "dia_semana": return { ...base, y: 120, tamanho: 30, cor: "#9a9aa2" };
       case "bateria": return { ...base, y: 380, tamanho: 26 };
+      case "autonomia": return { ...base, y: 350, tamanho: 24, cor: "#f0d27a" };
       case "passos": return { ...base, x: 150, y: 340, tamanho: 24 };
       case "batimentos": return { ...base, x: 316, y: 340, tamanho: 24, cor: "#e5484d" };
       case "texto": return { ...base, y: 150, tamanho: 26, texto: "MELO", cor: "#d4af37", peso: 800 };
