@@ -1,0 +1,23 @@
+name: Importar Gadgetbridge
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Versão do Gadgetbridge (vazio = última)"
+        required: false
+permissions:
+  contents: write
+jobs:
+  importar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar do Codeberg e guardar no ramo gadgetbridge
+        run: |
+          TAG="${{ github.event.inputs.tag }}"
+          if [ -z "$TAG" ]; then TAG=$(git ls-remote --tags --sort=-v:refname https://codeberg.org/Freeyourgadget/Gadgetbridge.git | grep -oE 'refs/tags/[0-9]+\.[0-9]+\.[0-9]+$' | head -1 | sed 's#refs/tags/##'); fi
+          echo "TAG=$TAG"
+          git clone --depth 1 --branch "$TAG" https://codeberg.org/Freeyourgadget/Gadgetbridge.git /tmp/gb
+          cd /tmp/gb && rm -rf .git .github && echo "$TAG" > VERSAO_GADGETBRIDGE.txt
+          git init -q -b gadgetbridge && git add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "Gadgetbridge $TAG"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" gadgetbridge
