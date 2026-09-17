@@ -573,6 +573,7 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
   $("#vNucleo").textContent = N.real ? N.versaoNome() + " (" + N.versao() + ")" : "navegador (sem relógio)";
   atualizarDados();
   verAtualizacao(false);
+  verFicheiroPendente();
   setInterval(() => { if ($("#ecra-inicio").classList.contains("ativo")) mostrarDispositivo(N.dispositivos()); }, 15000);
   document.fonts && document.fonts.ready.then(() => redesenhar());
 })();
