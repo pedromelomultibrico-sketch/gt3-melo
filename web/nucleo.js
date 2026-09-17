@@ -44,6 +44,10 @@
     guardar: (nome, b64) => J(N.guardar(nome, b64)),
     abrir: (e) => J(N.abrir(e)),
     ficheiroPendente: () => { try { const t = N.ficheiroPendente ? N.ficheiroPendente() : ""; return t ? JSON.parse(t) : null; } catch (e) { return null; } },
+    podeLerFicheiros: () => { try { return !!(N.podeLerFicheiros && N.podeLerFicheiros()); } catch (e) { return false; } },
+    pedirAcessoFicheiros: () => J(N.pedirAcessoFicheiros ? N.pedirAcessoFicheiros() : '{"ok":false}'),
+    transferencias: () => J(N.transferencias ? N.transferencias() : '{"ok":false,"erro":"núcleo antigo — atualize a app"}'),
+    lerTransferencia: (c) => J(N.lerTransferencia ? N.lerTransferencia(c) : '{"ok":false}'),
     atualizar: (u) => J(N.atualizar(u)),
     recarregar: () => N.recarregar(),
   };
