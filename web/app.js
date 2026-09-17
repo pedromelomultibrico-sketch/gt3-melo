@@ -180,6 +180,59 @@
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   };
 
+  // ---------- copiar de uma fotografia ----------
+  const CHAVE = "dd675fde21f25243db694192";
+  const ESQUEMA = `Formato obrigatório da resposta (JSON puro, sem texto à volta):
+{"nome":"...","fundo":{"tipo":"cor|gradiente","cor1":"#hex","cor2":"#hex","angulo":0},
+"camadas":[{"tipo":"hora|minutos_ponteiros|data|dia_semana|bateria|passos|batimentos|texto|anel|marcas","x":233,"y":233,"tamanho":80,"cor":"#hex","fonte":"Inter|Orbitron|Roboto Mono|Playfair Display|Bebas Neue","peso":400,"texto":"","espessura":4}]}
+O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letra, ou o raio nos tipos anel/marcas/minutos_ponteiros.`;
+  const PEDIDO_FOTO = `Esta fotografia mostra o mostrador de um relógio. Reproduz o arranjo com as peças disponíveis: cores do fundo, aro, marcas das horas, ponteiros ou hora digital, data, dia da semana, bateria, passos e batimentos, na posição e tamanho aproximados do original. Não inventes peças que não vês. ` + ESQUEMA;
+  let fotoB64 = null;
+
+  function extrairJson(t) {
+    const m = String(t).match(/\{[\s\S]*\}/);
+    if (!m) throw new Error("a IA não devolveu um desenho válido");
+    return JSON.parse(m[0]);
+  }
+  async function escolherFoto(e) {
+    const f = e.target.files[0]; if (!f) return;
+    const url = await redimensionar(await lerFicheiro(f, "url"), 768);
+    fotoB64 = url.split(",")[1];
+    $("#fotoPre").innerHTML = `<img src="${url}" style="width:120px;border-radius:12px;margin-top:8px">`;
+    $("#btFotoRapida").disabled = $("#btFotoFina").disabled = false;
+    e.target.value = "";
+  }
+  $("#fotoCamara").onchange = escolherFoto;
+  $("#fotoFicheiro").onchange = escolherFoto;
+
+  $("#btFotoRapida").onclick = async () => {
+    if (!fotoB64) return;
+    carregar(true, "A ler a fotografia…");
+    try {
+      const r = await api("/api/ia/exec", { chave: CHAVE, modelo: "@cf/meta/llama-3.2-11b-vision-instruct", entrada: { imagem_b64: fotoB64, prompt: PEDIDO_FOTO, max_tokens: 1200 } });
+      const t = r.resposta && (r.resposta.response || r.resposta.description || JSON.stringify(r.resposta));
+      abrirEditor(extrairJson(t));
+      toast("Desenho lido da foto — afine no editor");
+    } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+  };
+
+  $("#btFotoFina").onclick = async () => {
+    if (!fotoB64) return;
+    carregar(true, "A pedir ao Claude…");
+    try {
+      const r = await api("/api/claude", {
+        chave: CHAVE, model: "claude-sonnet-5", max_tokens: 1500,
+        messages: [{ role: "user", content: [
+          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: fotoB64 } },
+          { type: "text", text: PEDIDO_FOTO },
+        ] }],
+      });
+      const t = (r.content || []).map((c) => c.text || "").join("");
+      abrirEditor(extrairJson(t));
+      toast("Desenho lido da foto — afine no editor");
+    } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+  };
+
   // ---------- editor ----------
   let m = null, sel = null, tick = null, pacoteHwt = null, alvoHwt = -1;
   const tela = $("#tela");
