@@ -1,0 +1,19 @@
+name: Procurar base com sempre ligado
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  aod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q pillow requests
+      - run: python3 ci/procurar_aod.py || true
+      - run: |
+          git config user.name "GT3 Melo CI"
+          git config user.email "ci@gt3melo.local"
+          git add ci/relatorio-aod.txt nucleo/base-aod.hwt 2>/dev/null || git add ci/relatorio-aod.txt
+          git commit -m "relatorio aod [skip ci]" || exit 0
+          git pull --rebase origin main
+          git push
