@@ -90,11 +90,14 @@
   // Tokens: {cor(uint32 BGRA), n}. Custo: n===1 e cor != marcador -> 4 bytes; senão 12.
   function tokens(px, bits) {
     const t = [];
-    const m = bits >= 8 ? 0xff : (0xff << (8 - bits)) & 0xff;
+    // arredonda para os níveis disponíveis, em vez de cortar bits:
+    // assim um cinzento escuro não vai parar todo a preto
+    const niveis = (1 << bits) - 1, passo = 255 / niveis;
+    const q = bits >= 8 ? (v) => v : (v) => Math.round(Math.round(v / passo) * passo);
     let ant = -1, n = 0;
     for (let i = 0; i < px.length; i += 4) {
       const A = px[i + 3];
-      const R = px[i] & m, G = px[i + 1] & m, B = px[i + 2] & m;
+      const R = q(px[i]), G = q(px[i + 1]), B = q(px[i + 2]);
       const cor = A === 0 ? 0 : (B | (G << 8) | (R << 16) | (A << 24)) >>> 0;
       if (cor === ant) n++;
       else { if (n) t.push({ cor: ant, n }); ant = cor; n = 1; }
