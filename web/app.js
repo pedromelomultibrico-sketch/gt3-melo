@@ -515,6 +515,52 @@
     return pac;
   }
 
+  /**
+   * Formas de encolher um mostrador até caber no espaço do ecrã sempre ligado:
+   * escurecer, depois apagar o que é escuro, e por fim deixar só o desenho numa cor.
+   */
+  const RECEITAS_AOD = [
+    { escuro: 0.25 }, { escuro: 0.45 }, { escuro: 0.6 }, { escuro: 0.75 },
+    { escuro: 0.82, limiar: 70 }, { escuro: 0.85, limiar: 110 }, { escuro: 0.88, limiar: 150 },
+    { limiar: 140, cor: "#d4af37" }, { limiar: 180, cor: "#d4af37" }, { limiar: 210, cor: "#ffffff" },
+  ];
+
+  function desenhoAod(origem, largura, altura, receita) {
+    const c = document.createElement("canvas");
+    c.width = largura; c.height = altura;
+    const x = c.getContext("2d");
+    x.drawImage(origem, 0, 0, largura, altura);
+    const d = x.getImageData(0, 0, largura, altura);
+    const p = d.data;
+    const corFixa = receita.cor ? [parseInt(receita.cor.slice(1, 3), 16), parseInt(receita.cor.slice(3, 5), 16), parseInt(receita.cor.slice(5, 7), 16)] : null;
+    const escuro = receita.escuro || 0;
+    for (let i = 0; i < p.length; i += 4) {
+      const luz = 0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2];
+      if (receita.limiar && luz < receita.limiar) { p[i] = p[i + 1] = p[i + 2] = 0; p[i + 3] = 0; continue; }
+      if (corFixa) { p[i] = corFixa[0]; p[i + 1] = corFixa[1]; p[i + 2] = corFixa[2]; continue; }
+      if (escuro) { p[i] *= 1 - escuro; p[i + 1] *= 1 - escuro; p[i + 2] *= 1 - escuro; }
+    }
+    x.putImageData(d, 0, 0);
+    return c;
+  }
+
+  /** Base que vem com a app: uma máscara com ecrã sempre ligado, 466×466. */
+  const URL_BASE_INCLUIDA = "https://raw.githubusercontent.com/pedromelomultibrico-sketch/gt3-melo/main/nucleo/base-aod.hwt";
+  let baseIncluidaCache = null;
+  async function baseIncluida() {
+    if (baseIncluidaCache) return baseIncluidaCache;
+    try {
+      const bytes = new Uint8Array(await fetch(URL_BASE_INCLUIDA).then((r) => r.arrayBuffer()));
+      const b = new Blob([bytes]); b.name = "base-aod.hwt";
+      const pac = await HWT.abrir(b);
+      const f = HWT.indiceFundo(pac);
+      const a = f >= 0 ? HWT.indiceAod(pac, f) : -1;
+      if (f < 0 || a < 0) return null;
+      baseIncluidaCache = { item: { nome: "base incluída na app" }, pac, iF: f, iA: a, incluida: true };
+      return baseIncluidaCache;
+    } catch (e) { return null; }
+  }
+
   /** A base que ficou marcada como habitual, se ainda servir. */
   async function baseHabitual() {
     try {
