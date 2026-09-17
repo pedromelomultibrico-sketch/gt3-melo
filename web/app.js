@@ -496,6 +496,100 @@
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
+  const pacotesEmCache = new Map();
+  async function pacoteDe(id, nome) {
+    if (pacotesEmCache.has(id)) return pacotesEmCache.get(id);
+    const b64 = (await fetch("/api/ficheiro/" + id + "?t=" + Date.now()).then((r) => r.text())).trim();
+    if (b64.length < 500 || b64[0] === "{") throw new Error("sem ficheiro guardado");
+    const pac = await HWT.abrir(ficheiroDe(b64, (nome || "mascara") + ".hwt"));
+    pacotesEmCache.set(id, pac);
+    return pac;
+  }
+
+  /**
+   * A máscara escolhida não tem espaço de ecrã sempre ligado. Procura na biblioteca
+   * outra que tenha, e usa-a como suporte: o desenho desta entra no mostrador e,
+   * escurecido, no sempre ligado dessa.
+   */
+  async function escolherBase(item, pacOrigem, iF) {
+    const el = $("#acoesItem");
+    el.innerHTML = `<b>${item.nome}</b><p class="suave pequeno">Esta máscara não traz ecrã sempre ligado. Posso pôr o desenho dela numa máscara que tenha — os ponteiros e números passam a ser os dessa. A procurar máscaras que sirvam…</p>`;
+    el.classList.remove("escondido");
+    let itens = [];
+    try { itens = await api("/api/mascaras"); } catch (e) { toast("⚠ " + e.message); return; }
+    const candidatas = [];
+    for (const c of itens.filter((x) => x.ficheiro && x.id !== item.id).slice(0, 10)) {
+      try {
+        const pac = await pacoteDe(c.id, c.nome);
+        const f = HWT.indiceFundo(pac);
+        if (f < 0) continue;
+        const a = HWT.indiceAod(pac, f);
+        if (a < 0) continue;
+        candidatas.push({ item: c, pac, iF: f, iA: a });
+      } catch (e) { /* segue */ }
+    }
+    if (!candidatas.length) {
+      el.innerHTML = `<b>${item.nome}</b><p class="suave pequeno">Nenhuma das máscaras guardadas tem ecrã sempre ligado, por isso não há onde encaixar este desenho. Descarregue uma máscara que traga "AOD" ou "always on" e instale-a — depois esta conversão passa a funcionar.</p><button class="bt" id="acFechar2">Fechar</button>`;
+      $("#acFechar2").onclick = () => el.classList.add("escondido");
+      return;
+    }
+    el.innerHTML = `<b>${item.nome}</b>
+      <p class="suave pequeno">Escolha a máscara que serve de suporte. O desenho da ${item.nome} fica no mostrador e no ecrã apagado; os ponteiros e números passam a ser os da escolhida.</p>
+      <div class="lista" id="listaBases"></div>
+      <button class="bt" id="acFechar2">Fechar</button>`;
+    $("#acFechar2").onclick = () => el.classList.add("escondido");
+    const lista = $("#listaBases");
+    candidatas.forEach((c) => {
+      const b = document.createElement("button");
+      b.innerHTML = `${c.item.nome}<small>${c.pac.imgs[c.iF].largura}×${c.pac.imgs[c.iF].altura} · sempre ligado ${c.pac.imgs[c.iA].largura}×${c.pac.imgs[c.iA].altura}</small>`;
+      b.onclick = () => usarBase(item, pacOrigem, iF, c);
+      lista.append(b);
+    });
+  }
+
+  /** Monta a máscara nova: desenho da original no mostrador e, escurecido, no sempre ligado. */
+  async function usarBase(item, pacOrigem, iF, base) {
+    carregar(true, "A montar a máscara…");
+    try {
+      const fundo = HWT.descodificar(pacOrigem.bin, pacOrigem.imgs[iF]);
+      const orig = document.createElement("canvas");
+      orig.width = fundo.width; orig.height = fundo.height;
+      orig.getContext("2d").putImageData(fundo, 0, 0);
+      const desenhar = (largura, altura, escuro) => {
+        const c = document.createElement("canvas");
+        c.width = largura; c.height = altura;
+        const x = c.getContext("2d");
+        x.drawImage(orig, 0, 0, largura, altura);
+        if (escuro) { x.fillStyle = "rgba(0,0,0," + escuro + ")"; x.fillRect(0, 0, largura, altura); }
+        return c;
+      };
+      const imF = base.pac.imgs[base.iF], imA = base.pac.imgs[base.iA];
+      let feito = null, escuroUsado = 0;
+      for (const escuro of [0.25, 0.45, 0.6, 0.72, 0.82, 0.9]) {
+        carregar(true, "A ajustar o brilho (" + Math.round(escuro * 100) + "%)…");
+        try {
+          feito = await HWT.construir(base.pac, [
+            { indice: base.iF, canvas: desenhar(imF.largura, imF.altura, 0) },
+            { indice: base.iA, canvas: desenhar(imA.largura, imA.altura, escuro) },
+          ], null, item.nome, item.capa || null);
+          escuroUsado = escuro;
+          break;
+        } catch (e) { /* não coube: escurecer mais */ }
+      }
+      if (!feito) throw new Error("o desenho é detalhado demais para caber nesta base; tente outra");
+      carregar(true, "A enviar para o relógio…");
+      const b64 = HWT.paraBase64(feito.bytes);
+      const nome = item.nome + " (sempre ligado)";
+      const envio = res(N.instalar(nome + ".hwt", b64),
+        "Enviada. No relógio, escolha-a e ligue o \"Mostrar sempre\"." + (escuroUsado > 0.5 ? " Ficou mais escura para caber." : ""));
+      if (envio && envio.ok) {
+        await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa: item.capa || "" }, b64);
+        $("#acoesItem").classList.add("escondido");
+        carregarGaleria();
+      }
+    } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+  }
+
   /** Reinstala um ficheiro guardado. */
   async function instalarDaBiblioteca(item) {
     carregar(true, "A ir buscar o ficheiro…");
