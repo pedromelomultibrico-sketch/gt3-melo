@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>GT3 Melo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Orbitron:wght@400;700;900&family=Roboto+Mono:wght@400;700&family=Playfair+Display:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+<header id="topo">
+  <div class="marca"><span class="ouro">GT3</span> Melo</div>
+  <div id="estadoTopo" class="pilula">…</div>
+</header>
+
+<main>
+  <!-- INÍCIO -->
+  <section id="ecra-inicio" class="ecra ativo">
+    <div id="avisoAtualizar" class="cartao destaque escondido">
+      <b>Há uma versão nova do núcleo</b>
+      <p id="avisoAtualizarTxt"></p>
+      <button class="bt ouro" id="btAtualizar">Atualizar agora</button>
+    </div>
+
+    <div class="cartao relogio">
+      <div class="anelBateria"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="fundoAnel"/><circle id="arcoBateria" cx="50" cy="50" r="44" class="arco"/></svg>
+        <div class="bateriaTxt"><b id="bateriaVal">--</b><small>bateria</small></div></div>
+      <div class="info">
+        <h2 id="nomeRelogio">Sem relógio</h2>
+        <p id="estadoRelogio" class="suave">A procurar…</p>
+        <p id="firmwareRelogio" class="suave pequeno"></p>
+      </div>
+    </div>
+
+    <div class="grelha4">
+      <button class="acao" data-acao="ligar"><i>⟳</i>Ligar</button>
+      <button class="acao" data-acao="sincronizar"><i>⇅</i>Sincronizar</button>
+      <button class="acao" data-acao="encontrar"><i>◎</i>Encontrar</button>
+      <button class="acao" data-acao="hora"><i>◷</i>Acertar hora</button>
+    </div>
+
+    <h3>Hoje</h3>
+    <div class="grelha3">
+      <div class="cartao num"><small>Passos</small><b id="vPassos">--</b></div>
+      <div class="cartao num"><small>Batimentos</small><b id="vFc">--</b><small id="vFcExtra" class="suave"></small></div>
+      <div class="cartao num"><small>Sono</small><b id="vSono">--</b></div>
+    </div>
+    <div class="cartao"><small class="suave">Passos por quarto de hora</small><canvas id="grafPassos" height="120"></canvas></div>
+
+    <div class="cartao">
+      <b>Enviar mensagem para o relógio</b>
+      <input id="notTitulo" placeholder="Título" value="GT3 Melo">
+      <textarea id="notTexto" rows="2" placeholder="Texto">Olá Pedro, o relógio está ligado.</textarea>
+      <button class="bt" id="btNotificar">Enviar</button>
+    </div>
+  </section>
+
+  <!-- MÁSCARAS -->
+  <section id="ecra-mascaras" class="ecra">
+    <div class="linhaTitulo"><h3>As minhas máscaras</h3><button class="bt ouro pequeno" id="btNovaMascara">+ Nova</button></div>
+    <div class="cartao ia">
+      <b>Criar com IA</b>
+      <textarea id="iaDescricao" rows="2" placeholder="Ex.: preto e dourado, ponteiros finos, bateria em baixo, estilo luxo"></textarea>
+      <div class="linha"><button class="bt ouro" id="btIaCriar">Criar máscara</button><label class="chk"><input type="checkbox" id="iaComFundo" checked> com imagem de fundo</label></div>
+    </div>
+    <h3>Modelos</h3>
+    <div id="listaModelos" class="galeria"></div>
+    <h3>Guardadas</h3>
+    <div id="listaMascaras" class="galeria"><p class="suave">A carregar…</p></div>
+  </section>
+
+  <!-- EDITOR -->
+  <section id="ecra-editor" class="ecra">
+    <div class="linhaTitulo">
+      <button class="bt pequeno" id="btVoltarGaleria">‹ Máscaras</button>
+      <input id="edNome" class="nome" value="Nova máscara">
+    </div>
+    <div class="palco"><canvas id="tela" width="466" height="466"></canvas></div>
+
+    <div class="abas" id="abasEditor">
+      <button data-aba="camadas" class="ativo">Camadas</button>
+      <button data-aba="fundo">Fundo</button>
+      <button data-aba="ia">IA</button>
+      <button data-aba="enviar">Enviar</button>
+    </div>
+
+    <div class="aba ativo" data-aba="camadas">
+      <div class="linha"><select id="novoTipo">
+        <option value="hora">Hora digital</option><option value="minutos_ponteiros">Ponteiros</option>
+        <option value="data">Data</option><option value="dia_semana">Dia da semana</option>
+        <option value="bateria">Bateria</option><option value="passos">Passos</option>
+        <option value="batimentos">Batimentos</option><option value="texto">Texto</option>
+        <option value="anel">Anel</option><option value="marcas">Marcas das horas</option>
+      </select><button class="bt ouro" id="btAddCamada">Adicionar</button></div>
+      <div id="listaCamadas"></div>
+      <div id="propsCamada" class="cartao escondido"></div>
+    </div>
+
+    <div class="aba" data-aba="fundo">
+      <div class="cartao">
+        <label>Tipo<select id="fTipo"><option value="cor">Cor sólida</option><option value="gradiente">Gradiente</option><option value="imagem">Imagem</option></select></label>
+        <div class="linha"><label>Cor 1<input type="color" id="fCor1"></label><label>Cor 2<input type="color" id="fCor2"></label><label>Ângulo<input type="range" id="fAngulo" min="0" max="360"></label></div>
+        <label>Escurecer imagem<input type="range" id="fEscurecer" min="0" max="80" value="0"></label>
+        <div class="linha"><label class="bt ficheiro">Escolher imagem<input type="file" id="fImagem" accept="image/*"></label><button class="bt" id="btTirarImagem">Tirar imagem</button></div>
+      </div>
+    </div>
+
+    <div class="aba" data-aba="ia">
+      <div class="cartao">
+        <b>Alterar esta máscara com IA</b>
+        <textarea id="iaAlterar" rows="2" placeholder="Ex.: muda para azul, põe os passos em cima e uma letra mais fina"></textarea>
+        <button class="bt ouro" id="btIaAlterar">Aplicar</button>
+      </div>
+      <div class="cartao">
+        <b>Gerar só a imagem de fundo</b>
+        <textarea id="iaFundo" rows="2" placeholder="Ex.: fibra de carbono com reflexos dourados"></textarea>
+        <button class="bt ouro" id="btIaFundo">Gerar fundo</button>
+      </div>
+    </div>
+
+    <div class="aba" data-aba="enviar">
+      <div class="cartao">
+        <b>1. Guardar</b>
+        <div class="linha"><button class="bt ouro" id="btGuardar">Guardar na biblioteca</button><button class="bt" id="btDuplicar">Duplicar (cópia)</button><button class="bt perigo" id="btApagar">Apagar</button></div>
+      </div>
+      <div class="cartao">
+        <b>2. Exportar imagem</b>
+        <p class="suave pequeno">PNG 466×466 — para usar no Theme Studio da Huawei ou partilhar.</p>
+        <div class="linha"><button class="bt" id="btPngCompleto">PNG completo</button><button class="bt" id="btPngFundo">Só o fundo (sem hora)</button></div>
+      </div>
+      <div class="cartao">
+        <b>3. Enviar para o relógio <span class="etiqueta">experimental</span></b>
+        <p class="suave pequeno">O formato das máscaras da Huawei é fechado. O GT3 Melo pega numa máscara .hwt existente (a "base"), troca-lhe a imagem de fundo pelo seu desenho e mantém os ponteiros e números da base, que continuam a funcionar. Se o relógio recusar, nada se estraga.</p>
+        <label class="bt ficheiro">Escolher máscara base (.hwt)<input type="file" id="hwtBase" accept=".hwt,application/zip,application/octet-stream"></label>
+        <div id="hwtInfo" class="suave pequeno"></div>
+        <div id="hwtImagens" class="miniaturas"></div>
+        <label class="chk"><input type="checkbox" id="hwtSoEstatico" checked> no fundo, só as camadas fixas (sem hora/data/bateria, que já vêm na base)</label>
+        <div class="linha"><button class="bt ouro" id="btEnviarRelogio" disabled>Criar e enviar para o relógio</button><button class="bt" id="btGuardarHwt" disabled>Guardar .hwt</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RELÓGIO -->
+  <section id="ecra-relogio" class="ecra">
+    <h3>Relógio</h3>
+    <div class="lista">
+      <button data-abrir="emparelhar">Emparelhar um relógio<small>Primeira ligação do GT 3</small></button>
+      <button data-abrir="definicoes_relogio">Definições do relógio<small>Ecrã, gestos, saúde, idioma, não incomodar</small></button>
+      <button data-abrir="notificacoes">Notificações<small>Que apps enviam avisos para o pulso</small></button>
+      <button data-abrir="alarmes">Alarmes</button>
+      <button data-abrir="mostradores">Máscaras instaladas no relógio<small>Escolher a ativa ou apagar</small></button>
+      <button data-abrir="graficos">Gráficos de saúde<small>Passos, sono, batimentos, stress, SpO2</small></button>
+    </div>
+    <div class="cartao">
+      <b>Instalar ficheiro no relógio</b>
+      <p class="suave pequeno">Máscaras .hwt, apps, rotas .gpx ou música.</p>
+      <label class="bt ficheiro ouro">Escolher ficheiro<input type="file" id="ficheiroInstalar"></label>
+    </div>
+    <h3>Telemóvel</h3>
+    <div class="lista">
+      <button data-abrir="bateria">Não deixar o Android fechar a app<small>Evita perder a ligação ao relógio</small></button>
+      <button data-abrir="definicoes_app">Definições da app</button>
+      <button data-abrir="avancado">Modo avançado (Gadgetbridge)</button>
+    </div>
+  </section>
+
+  <!-- MAIS -->
+  <section id="ecra-mais" class="ecra">
+    <h3>Sobre</h3>
+    <div class="cartao">
+      <p><b>GT3 Melo</b></p>
+      <p class="suave">Núcleo: <span id="vNucleo">--</span><br>Interface: <span id="vInterface"></span><br>Última versão publicada: <span id="vPublicada">--</span></p>
+      <div class="linha"><button class="bt" id="btRecarregar">Recarregar interface</button><button class="bt ouro" id="btVerAtualizacao">Procurar atualização</button></div>
+    </div>
+    <div class="cartao">
+      <p class="suave pequeno">A interface atualiza sozinha sempre que a app abre. Só o núcleo (ligação Bluetooth) precisa de instalação, e a app avisa quando houver versão nova.</p>
+      <p class="suave pequeno">Baseado no Gadgetbridge (AGPL-3.0). Código: github.com/pedromelomultibrico-sketch/gt3-melo</p>
+    </div>
+  </section>
+</main>
+
+<nav id="navegacao">
+  <button data-ecra="inicio" class="ativo"><i>⌚</i>Início</button>
+  <button data-ecra="mascaras"><i>◐</i>Máscaras</button>
+  <button data-ecra="relogio"><i>⚙</i>Relógio</button>
+  <button data-ecra="mais"><i>⋯</i>Mais</button>
+</nav>
+
+<div id="carregando" class="escondido"><div class="rodar"></div><p id="carregandoTxt">A trabalhar…</p></div>
+<div id="toast"></div>
+
+<script src="nucleo.js?v=1"></script>
+<script src="estudio.js?v=1"></script>
+<script src="hwt.js?v=1"></script>
+<script src="app.js?v=1"></script>
+</body>
+</html>
