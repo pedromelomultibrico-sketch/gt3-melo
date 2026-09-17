@@ -397,7 +397,8 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
   };
 
   // exportar
-  function render(soEstatico, lado) { const c = document.createElement("canvas"); c.width = c.height = lado || 466; Estudio.desenhar(c, m, { estado: { ...estado, data: new Date() }, soEstatico }); return c; }
+  function renderDe(mascara, soEstatico, lado) { const c = document.createElement("canvas"); c.width = c.height = lado || 466; Estudio.desenhar(c, mascara, { estado: { ...estado, data: new Date() }, soEstatico }); return c; }
+  function render(soEstatico, lado) { return renderDe(m, soEstatico, lado); }
   function guardarCanvas(c, nome) { const b64 = c.toDataURL("image/png").split(",")[1]; res(N.guardar(nome, b64), "Guardado em Transferências: " + nome); }
   const nomeFicheiro = (s) => (m.nome || "mascara").normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").toLowerCase();
   $("#btPngCompleto").onclick = () => guardarCanvas(render(false), nomeFicheiro() + ".png");
