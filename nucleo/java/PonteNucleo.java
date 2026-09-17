@@ -91,6 +91,93 @@ public class PonteNucleo {
         return BuildConfig.VERSION_NAME;
     }
 
+    // ---------- máscaras guardadas no telemóvel ----------
+
+    /** Já pode ler a pasta Transferências? */
+    @JavascriptInterface
+    public boolean podeLerFicheiros() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) return Environment.isExternalStorageManager();
+        return act.checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+    }
+
+    /** Abre o ecrã do Android onde se dá essa autorização. */
+    @JavascriptInterface
+    public String pedirAcessoFicheiros() {
+        naUi(() -> {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    Intent i = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:" + act.getPackageName()));
+                    act.startActivity(i);
+                    Toast.makeText(act, "Autorize o acesso a todos os ficheiros e volte à app.", Toast.LENGTH_LONG).show();
+                } else {
+                    act.requestPermissions(new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, 4712);
+                }
+            } catch (Exception e) {
+                Toast.makeText(act, "Não consegui abrir as definições: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+        return OK;
+    }
+
+    /** Lista as máscaras (.hwt e .zip) que estão nas Transferências. */
+    @JavascriptInterface
+    public String transferencias() {
+        try {
+            JSONArray arr = new JSONArray();
+            File[] pastas = new File[]{
+                    Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                    act.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                    new File(Environment.getExternalStorageDirectory(), "Download"),
+            };
+            java.util.HashSet<String> vistos = new java.util.HashSet<>();
+            for (File dir : pastas) juntarFicheiros(dir, arr, vistos, 0);
+            return new JSONObject().put("ok", true).put("podeLer", podeLerFicheiros()).put("ficheiros", arr).toString();
+        } catch (Exception e) {
+            return erro(e);
+        }
+    }
+
+    private void juntarFicheiros(File dir, JSONArray arr, java.util.Set<String> vistos, int nivel) {
+        if (dir == null || !dir.isDirectory() || nivel > 1 || arr.length() > 200) return;
+        File[] fs = dir.listFiles();
+        if (fs == null) return;
+        for (File f : fs) {
+            if (f.isDirectory()) { juntarFicheiros(f, arr, vistos, nivel + 1); continue; }
+            String n = f.getName().toLowerCase();
+            if (!(n.endsWith(".hwt") || n.endsWith(".zip") || n.endsWith(".hwt.zip"))) continue;
+            if (f.length() < 5000 || f.length() > 25 * 1024 * 1024) continue;
+            if (!vistos.add(f.getAbsolutePath())) continue;
+            try {
+                arr.put(new JSONObject()
+                        .put("nome", f.getName())
+                        .put("caminho", f.getAbsolutePath())
+                        .put("tamanho", f.length())
+                        .put("data", f.lastModified()));
+            } catch (Exception ignored) { }
+        }
+    }
+
+    /** Lê um desses ficheiros em base64, para a interface o poder abrir e enviar. */
+    @JavascriptInterface
+    public String lerTransferencia(String caminho) {
+        try {
+            File f = new File(caminho);
+            if (!f.isFile() || f.length() > 25 * 1024 * 1024) return "{\"ok\":false,\"erro\":\"ficheiro inválido\"}";
+            byte[] b = new byte[(int) f.length()];
+            try (java.io.FileInputStream in = new java.io.FileInputStream(f)) {
+                int lido = 0;
+                while (lido < b.length) {
+                    int n = in.read(b, lido, b.length - lido);
+                    if (n <= 0) break;
+                    lido += n;
+                }
+            }
+            return new JSONObject().put("ok", true).put("nome", f.getName()).put("b64", Base64.encodeToString(b, Base64.NO_WRAP)).toString();
+        } catch (Exception e) {
+            return erro(e);
+        }
+    }
+
     /** Devolve (uma só vez) o ficheiro que abriu a app, em JSON: {nome, b64}. */
     @JavascriptInterface
     public String ficheiroPendente() {
