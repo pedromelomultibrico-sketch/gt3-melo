@@ -221,8 +221,21 @@
     return melhor;
   }
 
-  /** Troca a imagem `indice` pelo conteúdo do canvas e devolve o .hwt novo (Uint8Array). */
+  /** Troca uma ou mais imagens pelos desenhos dados e devolve o .hwt novo (Uint8Array). */
   async function construir(pacote, indice, canvasFonte, nome, capa) {
+    const trocas = Array.isArray(indice) ? indice : [{ indice, canvas: canvasFonte }];
+    const bin = new Uint8Array(pacote.bin);
+    let bitsMin = 8;
+    for (const t of trocas) {
+      const r = trocarImagem(pacote, t.indice, t.canvas);
+      bin.set(r.bytes, pacote.imgs[t.indice].dados);
+      bitsMin = Math.min(bitsMin, r.bits);
+    }
+    return empacotar(pacote, bin, nome, capa, bitsMin);
+  }
+
+  /** Codifica um desenho para caber, byte a byte, no espaço da imagem indicada. */
+  function trocarImagem(pacote, indice, canvasFonte) {
     const im = pacote.imgs[indice];
     const c = document.createElement("canvas");
     c.width = im.largura; c.height = im.altura;
