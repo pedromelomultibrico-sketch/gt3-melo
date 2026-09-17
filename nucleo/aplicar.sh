@@ -87,7 +87,7 @@ filtros += '''
                 <data android:mimeType="*/*" />'''
 padrao = '/.*'
 for _ in range(6):
-    filtros += '\\n                <data android:pathPattern="%s\\\\.hwt" />' % padrao
+    filtros += '\n                <data android:pathPattern="%s\\\\.hwt" />' % padrao
     padrao += '\\\\..*'
 filtros += '''
             </intent-filter>
