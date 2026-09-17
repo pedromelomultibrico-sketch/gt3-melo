@@ -57,7 +57,9 @@ python3 - "$M" <<'PY'
 import sys
 p = sys.argv[1]; s = open(p).read()
 s = s.replace('<uses-permission android:name="android.permission.INTERNET" tools:node="remove" />',
-              '<uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />')
+              '<uses-permission android:name="android.permission.INTERNET" />\n'
+              '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n'
+              '    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />')
 antes = s
 # tirar o ControlCenterv2 do lançador
 i = s.index('android:name=".activities.ControlCenterv2"')
