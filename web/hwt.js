@@ -12,8 +12,33 @@
     return -1;
   }
 
-  /** Lê as imagens do .bin. Devolve [{inicio, dados, fim, largura, altura}] */
+  function u16(b, i) { return b[i] | (b[i + 1] << 8); }
+  function u32(b, i) { return (b[i] | (b[i + 1] << 8) | (b[i + 2] << 16) | (b[i + 3] << 24)) >>> 0; }
+
+  /** Lê as imagens pelo cabeçalho e pela tabela FAT; se falhar, procura a assinatura. */
   function lerImagens(b) {
+    try {
+      const xmllen = u16(b, 2), maplen = u32(b, 4);
+      const corpo = 16 + xmllen + maplen + 8;
+      if (maplen > 0 && maplen % 8 === 0 && corpo < b.length) {
+        const lista = [];
+        for (let i = 0; i < maplen / 8; i++) {
+          const off = u32(b, 16 + xmllen + i * 8), sz = u32(b, 16 + xmllen + i * 8 + 4);
+          if (!sz) continue;
+          const ini = corpo + off - 8;
+          if (ini < corpo || ini + sz > b.length) throw new Error("FAT fora do ficheiro");
+          const w = u16(b, ini + 4), h = u16(b, ini + 6);
+          if (w < 1 || h < 1 || w > 1024 || h > 1024) throw new Error("dimensões estranhas");
+          lista.push({ inicio: ini, dados: ini + 8, fim: ini + sz, largura: w, altura: h });
+        }
+        if (lista.length) return lista;
+      }
+    } catch (e) { /* segue para a procura */ }
+    return procurarImagens(b);
+  }
+
+  /** Alternativa: procura a assinatura 0x55555555 e lê as imagens seguidas. */
+  function procurarImagens(b) {
     const s = acharAssinatura(b);
     if (s < 0) throw new Error("assinatura 0x55555555 não encontrada");
     let p = s + 8;
