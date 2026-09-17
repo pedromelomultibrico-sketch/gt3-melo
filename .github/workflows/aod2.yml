@@ -9,7 +9,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: pip install -q pillow requests
-      - run: python3 ci/procurar_aod2.py || true
+      - run: python3 ci/procurar_aod2.py > ci/relatorio-aod2.txt 2>&1 || true
+      - run: tail -40 ci/relatorio-aod2.txt
       - run: |
           git config user.name "GT3 Melo CI"
           git config user.email "ci@gt3melo.local"
