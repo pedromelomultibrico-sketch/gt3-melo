@@ -18,6 +18,7 @@
     notificar: () => '{"ok":true}',
     instalar: (n) => JSON.stringify({ ok: false, erro: "Só funciona dentro da app GT3 Melo (" + n + ")" }),
     guardar: (nome, b64) => { const a = document.createElement("a"); a.href = "data:application/octet-stream;base64," + b64; a.download = nome; a.click(); return '{"ok":true,"caminho":"Transferências"}'; },
+    ficheiroPendente: () => "",
     aviso: (t) => console.log(t), recarregar: () => location.reload(),
     abrir: (e) => { alert("No telemóvel abre o ecrã: " + e); return '{"ok":true}'; },
     atualizar: (u) => { window.open(u); return '{"ok":true}'; },
