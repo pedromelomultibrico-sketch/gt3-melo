@@ -295,9 +295,10 @@
         m.capa = capa;
         if (!m.nome || /^(com\.huawei\.watchface|description\.xml)$/i.test(m.nome)) m.nome = pac.titulo || m.nome;
         await api("/api/mascaras", m);
+        feitas++;
       } catch (e) { /* segue para a seguinte */ }
     }
-    if (semCapa.length) carregarGaleria();
+    if (feitas) carregarGaleria();
   }
 
   // ---------- ficheiros abertos de fora (tocar num .hwt, ou partilhar) ----------
