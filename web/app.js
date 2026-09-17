@@ -30,6 +30,7 @@
     window.scrollTo(0, 0);
     if (ecra === "mascaras") carregarGaleria();
     if (ecra === "inicio") atualizarDados();
+    if (ecra === "relogio") listarTransferencias();
   }
   window.voltar = function () { if (!pilha.length) return false; ir(pilha.pop(), true); return true; };
   $$("#navegacao button").forEach((b) => (b.onclick = () => { pilha.length = 0; ir(b.dataset.ecra, true); }));
