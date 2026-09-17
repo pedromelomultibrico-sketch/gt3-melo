@@ -66,6 +66,16 @@
       <textarea id="iaDescricao" rows="2" placeholder="Ex.: preto e dourado, ponteiros finos, bateria em baixo, estilo luxo"></textarea>
       <div class="linha"><button class="bt ouro" id="btIaCriar">Criar máscara</button><label class="chk"><input type="checkbox" id="iaComFundo" checked> com imagem de fundo</label></div>
     </div>
+    <div class="cartao ia">
+      <b>Copiar de uma fotografia</b>
+      <p class="suave pequeno">Fotografe um mostrador (o seu relógio, um anúncio, uma imagem) e a IA refaz o arranjo em camadas, para editar à vontade.</p>
+      <div class="linha">
+        <label class="bt ficheiro">Tirar foto<input type="file" id="fotoCamara" accept="image/*" capture="environment"></label>
+        <label class="bt ficheiro">Escolher imagem<input type="file" id="fotoFicheiro" accept="image/*"></label>
+      </div>
+      <div id="fotoPre"></div>
+      <div class="linha"><button class="bt ouro" id="btFotoRapida" disabled>Ler a foto</button><button class="bt" id="btFotoFina" disabled>Leitura fina (Claude)</button></div>
+    </div>
     <h3>Modelos</h3>
     <div id="listaModelos" class="galeria"></div>
     <h3>Guardadas</h3>
