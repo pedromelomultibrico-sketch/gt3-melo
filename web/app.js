@@ -387,6 +387,17 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
     mPrincipal.aodLigado = e.target.checked;
     if (e.target.checked && !mPrincipal.aod) trocarVariante("aod");
   };
+
+  /** Um toque: o mostrador tal como está passa a ser também o ecrã sempre ligado. */
+  $("#btCopiarParaAod").onclick = () => {
+    if (mPrincipal.aod && !confirm("Já tem um desenho próprio no sempre ligado. Substituir pelo mostrador atual?")) return;
+    const copia = JSON.parse(JSON.stringify({ nome: mPrincipal.nome + " — sempre ligado", fundo: mPrincipal.fundo, camadas: mPrincipal.camadas }));
+    mPrincipal.aod = Estudio.normalizar(copia);
+    mPrincipal.aodLigado = true;
+    $("#aodLigado").checked = true;
+    if (variante === "aod") { m = mPrincipal.aod; sel = null; $("#edNome").value = m.nome; preencherFundo(); listarCamadas(); redesenhar(); }
+    toast("Esta face passa a ir também para o sempre ligado");
+  };
   $$("#abasEditor button").forEach((b) => (b.onclick = () => {
     $$("#abasEditor button").forEach((x) => x.classList.toggle("ativo", x === b));
     $$(".aba").forEach((a) => a.classList.toggle("ativo", a.dataset.aba === b.dataset.aba));
