@@ -515,7 +515,9 @@
    * escurecer, depois apagar o que é escuro, e por fim deixar só o desenho numa cor.
    */
   const RECEITAS_AOD = [
-    { escuro: 0.25 }, { escuro: 0.45 }, { escuro: 0.6 }, { escuro: 0.75 },
+    { escuro: 0.2 }, { suave: 2, escuro: 0.2 }, { suave: 4, escuro: 0.3 },
+    { escuro: 0.45 }, { suave: 3, escuro: 0.45 }, { suave: 6, escuro: 0.5 },
+    { escuro: 0.6 }, { suave: 8, escuro: 0.6 }, { escuro: 0.75 },
     { escuro: 0.82, limiar: 70 }, { escuro: 0.85, limiar: 110 }, { escuro: 0.88, limiar: 150 },
     { limiar: 140, cor: "#d4af37" }, { limiar: 180, cor: "#d4af37" }, { limiar: 210, cor: "#ffffff" },
   ];
