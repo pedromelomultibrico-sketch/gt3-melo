@@ -516,10 +516,9 @@
    */
   const RECEITAS_AOD = [
     { escuro: 0.2 }, { suave: 2, escuro: 0.2 }, { suave: 4, escuro: 0.3 },
-    { escuro: 0.45 }, { suave: 3, escuro: 0.45 }, { suave: 6, escuro: 0.5 },
-    { escuro: 0.6 }, { suave: 8, escuro: 0.6 }, { escuro: 0.75 },
-    { escuro: 0.82, limiar: 70 }, { escuro: 0.85, limiar: 110 }, { escuro: 0.88, limiar: 150 },
-    { limiar: 140, cor: "#d4af37" }, { limiar: 180, cor: "#d4af37" }, { limiar: 210, cor: "#ffffff" },
+    { limiar: 50 }, { suave: 2, limiar: 50 }, { limiar: 80 }, { suave: 3, limiar: 80 },
+    { limiar: 110, escuro: 0.2 }, { limiar: 140, escuro: 0.25 }, { suave: 4, limiar: 140 },
+    { limiar: 150, cor: "#d4af37" }, { limiar: 180, cor: "#d4af37" }, { limiar: 205, cor: "#ffffff" },
   ];
 
   /** Formas de aliviar o mostrador: desfocar e reduzir cores até caber. */
