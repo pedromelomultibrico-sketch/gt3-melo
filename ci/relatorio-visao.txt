@@ -1,0 +1,25 @@
+== llama-3.2 aceitar licenca (@cf/meta/llama-3.2-11b-vision-instruct)
+error code: 1010
+
+
+== llama-3.2 vision (@cf/meta/llama-3.2-11b-vision-instruct)
+error code: 1010
+
+
+== llama-4 scout (@cf/meta/llama-4-scout-17b-16e-instruct)
+error code: 1010
+
+
+== mistral small 3.1 (@cf/mistralai/mistral-small-3.1-24b-instruct)
+error code: 1010
+
+
+== moondream 3.1 (@cf/moondream/moondream3.1-9B-A2B)
+error code: 1010
+
+
+== llava 1.5 (@cf/llava-hf/llava-1.5-7b-hf)
+error code: 1010
+
+
+não consegui enviar o relatório: HTTP Error 403: Forbidden
