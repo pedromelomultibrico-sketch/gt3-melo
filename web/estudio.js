@@ -93,6 +93,10 @@
       bateria: estado && estado.bateria >= 0 ? estado.bateria : 80,
       passos: estado && estado.passos >= 0 ? estado.passos : 8421,
       fc: estado && estado.fc > 0 ? estado.fc : 72,
+      autonomia: (() => {
+        const h = estado && estado.horasRestantes > 0 ? estado.horasRestantes : 54;
+        return h >= 24 ? Math.floor(h / 24) + "d " + Math.round(h % 24) + "h" : Math.round(h) + "h";
+      })(),
     };
   }
 
