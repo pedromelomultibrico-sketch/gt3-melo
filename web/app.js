@@ -387,13 +387,13 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
   // guardar / duplicar / apagar
   $("#btGuardar").onclick = async () => {
     carregar(true, "A guardar…");
-    try { const r = await api("/api/mascaras", m); m.id = r.id; toast("Máscara guardada"); } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+    try { const r = await api("/api/mascaras", mPrincipal); mPrincipal.id = r.id; toast("Máscara guardada"); } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   };
-  $("#btDuplicar").onclick = () => { const c = JSON.parse(JSON.stringify(m)); delete c.id; c.nome = m.nome + " (cópia)"; abrirEditor(c); toast("Cópia criada — guarde para manter"); };
+  $("#btDuplicar").onclick = () => { const c = JSON.parse(JSON.stringify(mPrincipal)); delete c.id; c.nome = mPrincipal.nome + " (cópia)"; abrirEditor(c); toast("Cópia criada — guarde para manter"); };
   $("#btApagar").onclick = async () => {
-    if (!m.id) return ir("mascaras");
-    if (!confirm("Apagar a máscara \"" + m.nome + "\"?")) return;
-    try { await api("/api/mascaras/" + m.id, null, "DELETE"); toast("Apagada"); ir("mascaras"); } catch (e) { toast("⚠ " + e.message); }
+    if (!mPrincipal.id) return ir("mascaras");
+    if (!confirm("Apagar a máscara \"" + mPrincipal.nome + "\"?")) return;
+    try { await api("/api/mascaras/" + mPrincipal.id, null, "DELETE"); toast("Apagada"); ir("mascaras"); } catch (e) { toast("⚠ " + e.message); }
   };
 
   // exportar
