@@ -116,6 +116,7 @@
     const min = sn.ok ? sn.minutosSono : 0;
     $("#vSono").textContent = min ? Math.floor(min / 60) + "h" + String(min % 60).padStart(2, "0") : "--";
     graficoPassos(d.serie || [], ini.getTime() / 1000);
+    atualizarAutonomia();
   }
 
   function graficoPassos(serie, ini) {
