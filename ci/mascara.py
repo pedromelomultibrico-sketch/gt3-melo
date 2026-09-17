@@ -12,7 +12,40 @@ from PIL import Image, ImageDraw, ImageFont
 MARCA = bytes([0x89, 0x67, 0x45, 0x23])
 
 
+def cabecalho(b):
+    ver, xmllen = struct.unpack_from("<HH", b, 0)
+    maplen, binlen, _ = struct.unpack_from("<III", b, 4)
+    return ver, xmllen, maplen, binlen
+
+
 def ler_imagens(b):
+    """Usa o cabeçalho e a tabela FAT (fiável); se falhar, procura a assinatura."""
+    try:
+        ver, xmllen, maplen, binlen = cabecalho(b)
+        corpo = 16 + xmllen + maplen + 8
+        if maplen == 0 or maplen % 8 or corpo >= len(b):
+            raise ValueError("cabeçalho estranho")
+        lista = []
+        for i in range(maplen // 8):
+            off, sz = struct.unpack_from("<II", b, 16 + xmllen + i * 8)
+            if sz == 0:
+                continue
+            ini = corpo + off - 8
+            if ini + sz > len(b) or ini < corpo:
+                raise ValueError("FAT fora do ficheiro")
+            w = b[ini + 4] | (b[ini + 5] << 8)
+            h = b[ini + 6] | (b[ini + 7] << 8)
+            if not (1 <= w <= 1024 and 1 <= h <= 1024):
+                raise ValueError("dimensões estranhas")
+            lista.append({"inicio": ini, "dados": ini + 8, "fim": ini + sz, "w": w, "h": h})
+        if lista:
+            return lista
+    except Exception as e:
+        print("FAT ilegível (%s), a procurar a assinatura" % e)
+    return procurar_imagens(b)
+
+
+def procurar_imagens(b):
     s = b.find(b"\x55\x55\x55\x55")
     if s < 0:
         raise SystemExit("assinatura não encontrada")
