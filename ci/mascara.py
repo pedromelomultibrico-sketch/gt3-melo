@@ -48,7 +48,7 @@ def ler_imagens(b):
 def procurar_imagens(b):
     s = b.find(b"\x55\x55\x55\x55")
     if s < 0:
-        raise SystemExit("assinatura não encontrada")
+        raise ValueError("assinatura não encontrada")
     p = s + 8
     lista = []
     while p + 8 <= len(b) and len(lista) < 2000:
