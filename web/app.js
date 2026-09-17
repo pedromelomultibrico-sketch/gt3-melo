@@ -125,6 +125,57 @@
     } finally { carregar(false); e.target.value = ""; }
   };
 
+  // ---------- máscaras que já estão no telemóvel ----------
+  /** Recebe os bytes, tira a máscara de dentro do zip se for preciso, envia e guarda. */
+  async function instalarB64(nomeFicheiro, b64) {
+    let nome = (nomeFicheiro || "mascara").replace(/\.zip$/i, "").replace(/\.hwt$/i, ""), capa = "";
+    try {
+      const pac = await HWT.abrir(ficheiroDe(b64, nomeFicheiro));
+      nome = pac.titulo || nome;
+      capa = await capaDoHwt(pac);
+      b64 = HWT.paraBase64(pac.bytes);
+    } catch (e) { /* segue tal e qual */ }
+    const envio = res(N.instalar(nome + ".hwt", b64), "Enviada para o relógio. Veja o progresso na notificação.");
+    if (envio && envio.ok) {
+      await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa }, b64);
+      toast("Guardada na biblioteca: " + nome);
+    }
+    return envio;
+  }
+
+  function tamanhoTxt(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.round(n / 1024) + " KB"; }
+
+  function listarTransferencias() {
+    const el = $("#listaTransferencias");
+    const r = N.transferencias();
+    if (!r || !r.ok) { el.innerHTML = '<p class="suave pequeno">' + ((r && r.erro) || "não consegui ler a pasta") + "</p>"; return; }
+    if (!r.podeLer) {
+      el.innerHTML = '<p class="suave pequeno">Falta a autorização do Android para eu ver os ficheiros descarregados.</p><button class="bt ouro" id="btAcessoFicheiros">Dar autorização</button>';
+      $("#btAcessoFicheiros").onclick = () => { N.pedirAcessoFicheiros(); toast("Autorize e volte à app"); };
+      return;
+    }
+    const fs = (r.ficheiros || []).sort((a, b) => b.data - a.data);
+    if (!fs.length) { el.innerHTML = '<p class="suave pequeno">Nenhuma máscara nas Transferências. Descarregue um .hwt e toque em Atualizar.</p>'; return; }
+    el.innerHTML = '<div class="lista"></div>';
+    const lista = el.firstChild;
+    fs.forEach((f) => {
+      const b = document.createElement("button");
+      const d = new Date(f.data);
+      b.innerHTML = `${f.nome}<small>${tamanhoTxt(f.tamanho)} · ${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}</small>`;
+      b.onclick = async () => {
+        carregar(true, "A ler " + f.nome + "…");
+        try {
+          const lido = N.lerTransferencia(f.caminho);
+          if (!lido.ok) throw new Error(lido.erro || "não consegui ler");
+          carregar(true, "A enviar para o relógio…");
+          await instalarB64(lido.nome, lido.b64);
+        } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+      };
+      lista.append(b);
+    });
+  }
+  $("#btAtualizarTransf").onclick = listarTransferencias;
+
   // máscara de teste já preparada (guardada no Cloudflare)
   $("#btMascaraTeste").onclick = async () => {
     carregar(true, "A ir buscar a máscara de teste…");
