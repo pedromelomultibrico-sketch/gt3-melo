@@ -227,8 +227,18 @@ def main():
     imgs = ler_imagens(bin_)
     if not imgs:
         raise SystemExit("sem imagens legíveis no watchface.bin")
-    alvo = max(imgs, key=lambda x: x["w"] * x["h"])
-    print("imagens:", len(imgs), "| maior:", alvo["w"], "x", alvo["h"], "=", alvo["fim"] - alvo["dados"], "bytes")
+    candidatos = []
+    for im in imgs:
+        if min(im["w"], im["h"]) < 200:
+            continue
+        op = opacidade(descodificar(bin_, im))
+        candidatos.append((im, op))
+        print("  imagem %dx%d  %d bytes  opacidade %.2f" % (im["w"], im["h"], im["fim"] - im["dados"], op))
+    bons = [c for c in candidatos if c[1] > 0.60]
+    if not bons:
+        raise SystemExit("esta base não tem fundo principal substituível (só sobreposições ou desenhos pequenos)")
+    alvo = max(bons, key=lambda c: c[0]["w"] * c[0]["h"])[0]
+    print("imagens:", len(imgs), "| escolhida:", alvo["w"], "x", alvo["h"], "=", alvo["fim"] - alvo["dados"], "bytes")
     original = descodificar(bin_, alvo)
     original.save(os.path.splitext(saida)[0] + "-original.png")
     novo = desenho_teste(alvo["w"], alvo["h"])
