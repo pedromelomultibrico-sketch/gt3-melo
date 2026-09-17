@@ -515,6 +515,20 @@
     return pac;
   }
 
+  /** A base que ficou marcada como habitual, se ainda servir. */
+  async function baseHabitual() {
+    try {
+      const itens = await api("/api/mascaras");
+      const m = itens.find((x) => x.basePadrao && x.ficheiro);
+      if (!m) return null;
+      const pac = await pacoteDe(m.id, m.nome);
+      const f = HWT.indiceFundo(pac);
+      const a = f >= 0 ? HWT.indiceAod(pac, f) : -1;
+      if (f < 0 || a < 0) return null;
+      return { item: m, pac, iF: f, iA: a };
+    } catch (e) { return null; }
+  }
+
   /**
    * A máscara escolhida não tem espaço de ecrã sempre ligado. Procura na biblioteca
    * outra que tenha, e usa-a como suporte: o desenho desta entra no mostrador e,
