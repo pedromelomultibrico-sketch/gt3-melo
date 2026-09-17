@@ -3,10 +3,19 @@ package nodomain.freeyourgadget.gadgetbridge.melo;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.provider.OpenableColumns;
+import android.util.Base64;
+
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
