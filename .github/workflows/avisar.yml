@@ -1,0 +1,18 @@
+name: Avisar no Telegram
+on:
+  workflow_dispatch:
+    inputs:
+      texto:
+        description: "Mensagem"
+        required: true
+jobs:
+  avisar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar
+        env:
+          TEXTO: ${{ github.event.inputs.texto }}
+        run: |
+          R=$(curl -s -X POST --data-binary "$TEXTO" "https://gt3-melo.pedromelomultibrico.workers.dev/notificar/dd675fde21f25243db694192")
+          echo "$R"
+          curl -s -X POST --data-binary "$R" "https://gt3-melo.pedromelomultibrico.workers.dev/ci/dd675fde21f25243db694192/avisar" || true
