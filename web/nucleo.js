@@ -39,6 +39,7 @@
     instalar: (nome, b64) => J(N.instalar(nome, b64)),
     guardar: (nome, b64) => J(N.guardar(nome, b64)),
     abrir: (e) => J(N.abrir(e)),
+    ficheiroPendente: () => { try { const t = N.ficheiroPendente ? N.ficheiroPendente() : ""; return t ? JSON.parse(t) : null; } catch (e) { return null; } },
     atualizar: (u) => J(N.atualizar(u)),
     recarregar: () => N.recarregar(),
   };
