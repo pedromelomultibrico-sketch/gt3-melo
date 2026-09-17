@@ -1,0 +1,71 @@
+name: Construir GT3 Melo
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "nucleo/**"
+      - ".github/workflows/apk.yml"
+permissions:
+  contents: write
+concurrency:
+  group: apk
+  cancel-in-progress: true
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Garantir chave de assinatura (sempre a mesma, para as atualizações funcionarem)
+        run: |
+          if [ ! -f nucleo/assinatura.b64 ]; then
+            keytool -genkeypair -keystore /tmp/k.jks -storetype PKCS12 -storepass gt3melo2026 -keypass gt3melo2026 -alias gt3melo -keyalg RSA -keysize 2048 -validity 20000 -dname "CN=GT3 Melo, O=Pedro Melo, C=AO"
+            base64 -w0 /tmp/k.jks > nucleo/assinatura.b64
+            git config user.name "GT3 Melo CI"; git config user.email "ci@gt3melo.local"
+            git add nucleo/assinatura.b64 && git commit -m "chave de assinatura [skip ci]" && git push
+          fi
+      - name: Buscar o Gadgetbridge
+        run: git clone --depth 1 -b gadgetbridge "https://github.com/${{ github.repository }}.git" gb
+      - name: Aplicar alteracoes GT3 Melo
+        run: bash nucleo/aplicar.sh gb ${{ github.run_number }}
+      - name: Compilar APK
+        working-directory: gb
+        run: |
+          set -o pipefail
+          chmod +x gradlew
+          ./gradlew assembleMainlineRelease --no-daemon --stacktrace -x lint 2>&1 | tee ../build.log
+      - name: Enviar registo
+        if: always()
+        run: |
+          echo "run=${{ github.run_number }} estado=${{ job.status }}" > registo.txt
+          grep -nE "error:|e: |FAILURE|What went wrong|BUILD (SUCCESSFUL|FAILED)|warning: \[" -A4 build.log | head -300 >> registo.txt || true
+          echo "----- fim do log -----" >> registo.txt
+          tail -c 60000 build.log >> registo.txt || true
+          curl -s -X POST --data-binary @registo.txt "https://gt3-melo.pedromelomultibrico.workers.dev/ci/dd675fde21f25243db694192/apk" || true
+      - name: Preparar ficheiro
+        run: cp gb/app/build/outputs/apk/mainline/release/*.apk GT3-Melo.apk
+      - name: Publicar versao
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.${{ github.run_number }}
+          name: GT3 Melo 1.${{ github.run_number }}
+          body: Descarregue o GT3-Melo.apk no telemóvel e instale.
+          files: GT3-Melo.apk
+          make_latest: true
+      - name: Atualizar versao.json
+        run: |
+          N=${{ github.run_number }}
+          cat > versao.json <<EOF
+          {"versaoCodigo": $((1000 + N)), "versaoNome": "1.$N", "apk": "https://github.com/${{ github.repository }}/releases/download/v1.$N/GT3-Melo.apk", "data": "$(date -u +%FT%TZ)"}
+          EOF
+          git config user.name "GT3 Melo CI"
+          git config user.email "ci@gt3melo.local"
+          git add versao.json
+          git commit -m "versao 1.$N [skip ci]"
+          git pull --rebase origin main
+          git push
