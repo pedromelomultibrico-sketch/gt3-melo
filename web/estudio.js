@@ -65,6 +65,13 @@
     if (!m) return n;
     const out = { ...m, nome: m.nome || n.nome, fundo: { ...n.fundo, ...(m.fundo || {}) } };
     out.camadas = (m.camadas || []).filter((c) => NOMES[c.tipo]).map((c) => ({ ...camadaPadrao(c.tipo), ...c, id: c.id || Math.random().toString(36).slice(2, 9) }));
+    // o ecrã é redondo: puxar para dentro o que ficou fora do círculo
+    out.camadas.forEach((c) => {
+      if (["anel", "marcas", "minutos_ponteiros"].includes(c.tipo)) { c.x = C; c.y = C; c.tamanho = Math.min(232, Math.max(40, Number(c.tamanho) || 200)); return; }
+      c.tamanho = Math.min(200, Math.max(10, Number(c.tamanho) || 30));
+      const dx = c.x - C, dy = c.y - C, d = Math.hypot(dx, dy), max = 185;
+      if (d > max) { c.x = Math.round(C + (dx / d) * max); c.y = Math.round(C + (dy / d) * max); }
+    });
     return out;
   }
 
