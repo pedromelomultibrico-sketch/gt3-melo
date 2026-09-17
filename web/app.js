@@ -498,7 +498,14 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
     carregar(true, "A criar e a enviar…");
     try {
       const r = await construirHwt();
-      res(N.instalar(nomeFicheiro() + ".hwt", HWT.paraBase64(r.bytes)), "Enviado. O relógio mostra o progresso; depois escolha a máscara no pulso." + (r.bits < 8 ? " (cores reduzidas para caber)" : ""));
+      const b64 = HWT.paraBase64(r.bytes);
+      const envio = res(N.instalar(nomeFicheiro() + ".hwt", b64), "Enviado. O relógio mostra o progresso; depois escolha a máscara no pulso." + (r.bits < 8 ? " (cores reduzidas para caber)" : ""));
+      if (envio && envio.ok) {
+        carregar(true, "A guardar na biblioteca…");
+        mPrincipal.origem = mPrincipal.origem || "minha";
+        const g = await guardarNaBiblioteca(mPrincipal, b64);
+        if (g) mPrincipal.id = g.id;
+      }
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   };
 
