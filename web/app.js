@@ -399,6 +399,7 @@
     $("#acFechar").onclick = () => el.classList.add("escondido");
     if ($("#acEditar")) $("#acEditar").onclick = () => { el.classList.add("escondido"); aoEditar(); };
     if ($("#acInstalar")) $("#acInstalar").onclick = () => instalarDaBiblioteca(item);
+    if ($("#acAod")) $("#acAod").onclick = () => converterSempreLigado(item);
     $("#acApagar").onclick = async () => {
       if (!confirm("Apagar \"" + item.nome + "\" da biblioteca? O relógio fica na mesma.")) return;
       try { await api("/api/mascaras/" + item.id, null, "DELETE"); el.classList.add("escondido"); toast("Apagada"); carregarGaleria(); }
