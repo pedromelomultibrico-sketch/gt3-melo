@@ -650,24 +650,19 @@
       orig.width = fundo.width; orig.height = fundo.height;
       orig.getContext("2d").putImageData(fundo, 0, 0);
       const imF = base.pac.imgs[base.iF], imA = base.pac.imgs[base.iA];
-      const mostrador = document.createElement("canvas");
-      mostrador.width = imF.largura; mostrador.height = imF.altura;
-      mostrador.getContext("2d").drawImage(orig, 0, 0, imF.largura, imF.altura);
-      let feito = null, usou = null;
-      for (let k = 0; k < RECEITAS_AOD.length; k++) {
-        const r = RECEITAS_AOD[k];
-        carregar(true, "A ajustar o ecrã apagado (tentativa " + (k + 1) + ")…");
-        try {
-          feito = await HWT.construir(base.pac, [
-            { indice: base.iF, canvas: mostrador },
-            { indice: base.iA, canvas: desenhoAod(orig, imA.largura, imA.altura, r) },
-          ], null, item.nome, item.capa || null);
-          usou = r;
-          break;
-        } catch (e) { /* não coube: receita seguinte */ }
-      }
-      if (!feito) throw new Error("o desenho é detalhado demais para caber nesta base; tente outra");
-      const escuroUsado = usou && (usou.cor ? 1 : usou.escuro || 0);
+      carregar(true, "A encaixar o mostrador…");
+      const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
+      if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base; escolha outra base");
+      carregar(true, "A encaixar o ecrã apagado…");
+      const apagado = ajustar(orig, imA.largura, imA.altura, imA.fim - imA.dados, RECEITAS_AOD, desenhoAod);
+      if (!apagado) throw new Error("não consegui reduzir o desenho ao espaço do ecrã apagado desta base");
+      carregar(true, "A montar o ficheiro…");
+      const feito = await HWT.construir(base.pac, [
+        { indice: base.iF, canvas: mostrador.canvas },
+        { indice: base.iA, canvas: apagado.canvas },
+      ], null, item.nome, item.capa || null);
+      const escuroUsado = apagado.receita.cor ? 1 : (apagado.receita.escuro || 0);
+      const suavizado = mostrador.receita.suave || 0;
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
       const nome = item.nome + " (sempre ligado)";
