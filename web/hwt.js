@@ -252,9 +252,11 @@
     const alvo = im.fim - im.dados;
     const cod = codificarExato(px, alvo);
     if (!cod) throw new Error("o desenho tem demasiado detalhe para caber no espaço desta base (" + Math.round(alvo / 1024) + " KB). Use uma base com fundo em fotografia ou simplifique o fundo.");
-    const bin = new Uint8Array(pacote.bin);
-    bin.set(cod.bytes, im.dados);
+    return cod;
+  }
 
+  /** Volta a montar o ficheiro .hwt com o binário já alterado. */
+  async function empacotar(pacote, bin, nome, capa, bits) {
     const saida = new JSZip();
     for (const nomeF of Object.keys(pacote.zip.files)) {
       const f = pacote.zip.files[nomeF];
