@@ -167,6 +167,11 @@ def codificar_exato(img, alvo):
     return None
 
 
+def opacidade(img):
+    dados = img.split()[3].tobytes()
+    return sum(1 for v in dados if v > 0) / len(dados)
+
+
 def desenho_teste(w, h):
     """Fundo de teste do GT3 Melo: preto com anel dourado, marcas e assinatura."""
     S = max(w, h)
