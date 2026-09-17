@@ -429,7 +429,7 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
       const aviso = alvoHwt < 0
         ? "<br>⚠ Esta base não tem fundo principal para substituir (só sobreposições). Escolha outra máscara."
         : "";
-      $("#hwtInfo").innerHTML = `Base: <b>${pacoteHwt.titulo}</b> ${pacoteHwt.screen ? "(" + pacoteHwt.screen + ")" : ""}<br>${pacoteHwt.imgs.length} imagens. A trocar (dourada): ${fundo ? fundo.largura + "×" + fundo.altura : "nenhuma"} — toque noutra para mudar.${aviso}`;
+      $("#hwtInfo").innerHTML = `Base: <b>${pacoteHwt.titulo}</b> ${pacoteHwt.screen ? "(" + pacoteHwt.screen + ")" : ""}<br>${pacoteHwt.imgs.length} imagens. A trocar (dourada): ${fundo ? fundo.largura + "×" + fundo.altura : "nenhuma"} — toque noutra para mudar.${linhaAod}${aviso}`;
       $("#btEnviarRelogio").disabled = $("#btGuardarHwt").disabled = alvoHwt < 0;
     } catch (err) { pacoteHwt = null; $("#hwtInfo").textContent = "⚠ " + err.message; $("#btEnviarRelogio").disabled = $("#btGuardarHwt").disabled = true; }
     finally { carregar(false); e.target.value = ""; }
