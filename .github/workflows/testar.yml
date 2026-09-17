@@ -5,17 +5,40 @@ jobs:
   testar:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q pillow
       - name: Testes
         run: |
+          U=https://gt3-melo.pedromelomultibrico-sketch.workers.dev
           U=https://gt3-melo.pedromelomultibrico.workers.dev
+          K=dd675fde21f25243db694192
+          python3 - <<'PY'
+          import sys, json, base64
+          sys.path.insert(0, "ci")
+          from mascara import desenho_teste
+          import io
+          im = desenho_teste(466, 466).convert("RGB")
+          b = io.BytesIO(); im.save(b, "JPEG", quality=85)
+          d = base64.b64encode(b.getvalue()).decode()
+          pedido = ("Esta fotografia mostra o mostrador de um relogio. Reproduz o arranjo em JSON puro: "
+                    '{"nome":"...","fundo":{"tipo":"cor|gradiente","cor1":"#hex","cor2":"#hex","angulo":0},'
+                    '"camadas":[{"tipo":"hora|minutos_ponteiros|data|bateria|passos|batimentos|texto|anel|marcas",'
+                    '"x":233,"y":233,"tamanho":80,"cor":"#hex","fonte":"Inter","peso":400,"texto":"","espessura":4}]}')
+          json.dump({"chave": "dd675fde21f25243db694192",
+                     "modelo": "@cf/meta/llama-3.2-11b-vision-instruct",
+                     "entrada": {"imagem_b64": d, "prompt": pedido, "max_tokens": 1200}}, open("cf.json", "w"))
+          json.dump({"chave": "dd675fde21f25243db694192", "model": "claude-sonnet-5", "max_tokens": 1200,
+                     "messages": [{"role": "user", "content": [
+                         {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": d}},
+                         {"type": "text", "text": pedido}]}]}, open("cl.json", "w"))
+          print("pedidos preparados")
+          PY
           {
-          echo "== /"; curl -s -o /tmp/i.html -w "%{http_code} %{content_type} %{size_download}\n" $U/; grep -o "<title>.*</title>" /tmp/i.html
-          for p in app.js app.css hwt.js estudio.js nucleo.js api/versao; do echo "== $p"; curl -s -o /dev/null -w "%{http_code} %{content_type} %{size_download}\n" $U/$p; done
-          curl -s $U/api/versao; echo
-          echo "== IA mascara"; curl -s -X POST -H 'content-type: application/json' -d '{"descricao":"preto e dourado, ponteiros finos, bateria em baixo"}' $U/api/ia/mascara | head -c 1500; echo
-          echo "== IA fundo"; curl -s -X POST -H 'content-type: application/json' -d '{"prompt":"gold carbon fiber"}' $U/api/ia/fundo | head -c 200; echo
-          echo "== mascaras"; curl -s $U/api/mascaras | head -c 300; echo
-          echo "== apk"; curl -sIL https://github.com/pedromelomultibrico-sketch/gt3-melo/releases/download/v1.2/GT3-Melo.apk | grep -iE "^HTTP|content-length" | tail -2
+          echo "== paginas"
+          for p in "" app.js hwt.js api/versao; do curl -s -o /dev/null -w "$p %{http_code}\n" $U/$p; done
+          echo "== mascara de teste no servidor"; curl -s "$U/ci/$K/mascara-teste" | wc -c
+          echo "== IA foto (Cloudflare)"; curl -s -X POST -H 'content-type: application/json' --data-binary @cf.json $U/api/ia/exec | head -c 1800; echo
+          echo "== IA foto (Claude)"; curl -s -X POST -H 'content-type: application/json' --data-binary @cl.json $U/api/claude | head -c 1200; echo
           } > r.txt 2>&1
           cat r.txt
-          curl -s -X POST --data-binary @r.txt "$U/ci/dd675fde21f25243db694192/teste"
+          curl -s -X POST --data-binary @r.txt "$U/ci/$K/teste"
