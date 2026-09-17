@@ -667,7 +667,9 @@
       const b64 = HWT.paraBase64(feito.bytes);
       const nome = item.nome + " (sempre ligado)";
       const envio = res(N.instalar(nome + ".hwt", b64),
-        "Enviada. No relógio, escolha-a e ligue o \"Mostrar sempre\"." + (escuroUsado > 0.5 ? " Ficou mais escura para caber." : ""));
+        "Enviada. No relógio, escolha-a e ligue o \"Mostrar sempre\"."
+        + (escuroUsado > 0.5 ? " O ecrã apagado ficou mais escuro para caber." : "")
+        + (suavizado ? " O mostrador foi suavizado " + suavizado + "px para caber." : ""));
       if (envio && envio.ok) {
         await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa: item.capa || "" }, b64);
         if (!base.incluida && !base.item.basePadrao) { base.item.basePadrao = true; try { await api("/api/mascaras", base.item); } catch (e) { /* nada */ } }
