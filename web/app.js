@@ -384,6 +384,7 @@
     } catch (e) { el.innerHTML = '<p class="suave pequeno">Sem ligação à biblioteca.</p>'; }
   }
   $("#btNovaMascara").onclick = () => abrirEditor(Estudio.nova());
+  $("#btAtualizarBiblio").onclick = carregarGaleria;
 
   async function iaCriar(descricao, atual) {
     const r = await api("/api/ia/mascara", { descricao, atual });
