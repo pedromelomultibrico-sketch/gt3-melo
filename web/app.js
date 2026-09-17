@@ -256,14 +256,45 @@
     } catch (e) { toast("⚠ não consegui guardar na biblioteca: " + e.message); }
   }
 
-  /** Imagem pequena para a galeria. */
+  /** Imagem pequena para a galeria: a do ficheiro, ou o próprio mostrador desenhado. */
   async function capaDoHwt(pacote) {
     try {
       const f = pacote.zip.file("preview/cover.jpg") || pacote.zip.file("preview/icon_small.jpg");
-      if (!f) return "";
-      const b64 = await f.async("base64");
-      return await redimensionar("data:image/jpeg;base64," + b64, 180);
+      if (f) {
+        const b64 = await f.async("base64");
+        return await redimensionar("data:image/jpeg;base64," + b64, 180);
+      }
+    } catch (e) { /* segue para o desenho */ }
+    try {
+      // sem pré-visualização no ficheiro: desenhar o fundo principal da máscara
+      const i = HWT.indiceFundo(pacote);
+      if (i < 0) return "";
+      const im = HWT.descodificar(pacote.bin, pacote.imgs[i]);
+      const c = document.createElement("canvas");
+      c.width = im.width; c.height = im.height;
+      const x = c.getContext("2d");
+      x.fillStyle = "#000"; x.fillRect(0, 0, c.width, c.height);
+      x.putImageData(im, 0, 0);
+      return await redimensionar(c.toDataURL("image/jpeg", 0.85), 180);
     } catch (e) { return ""; }
+  }
+
+  /** Vai buscar o .hwt guardado e desenha a pré-visualização que faltava. */
+  async function repararCapas(itens) {
+    const semCapa = itens.filter((m) => m.ficheiro && !m.capa).slice(0, 6);
+    for (const m of semCapa) {
+      try {
+        const b64 = (await fetch("/api/ficheiro/" + m.id + "?t=" + Date.now()).then((r) => r.text())).trim();
+        if (b64.length < 500 || b64[0] === "{") continue;
+        const pac = await HWT.abrir(ficheiroDe(b64, m.nome + ".hwt"));
+        const capa = await capaDoHwt(pac);
+        if (!capa) continue;
+        m.capa = capa;
+        if (!m.nome || /^(com\.huawei\.watchface|description\.xml)$/i.test(m.nome)) m.nome = pac.titulo || m.nome;
+        await api("/api/mascaras", m);
+      } catch (e) { /* segue para a seguinte */ }
+    }
+    if (semCapa.length) carregarGaleria();
   }
 
   // ---------- ficheiros abertos de fora (tocar num .hwt, ou partilhar) ----------
