@@ -335,15 +335,38 @@
     return b;
   }
 
-  /** Item que é um ficheiro .hwt guardado: reinstalar ou apagar. */
-  async function abrirFicheiro(item) {
-    if (!confirm("Instalar de novo \"" + item.nome + "\" no relógio?")) return;
+  /** Cartão de ações de um item da biblioteca. */
+  function mostrarAcoes(item, aoEditar) {
+    const el = $("#acoesItem");
+    const quando = item.alterada ? new Date(item.alterada) : null;
+    el.innerHTML = `<b>${item.nome}</b>
+      <p class="suave pequeno">${ORIGENS[item.origem] || "guardada"}${quando ? " · " + String(quando.getDate()).padStart(2, "0") + "/" + String(quando.getMonth() + 1).padStart(2, "0") + " " + String(quando.getHours()).padStart(2, "0") + ":" + String(quando.getMinutes()).padStart(2, "0") : ""}</p>
+      <div class="linha">
+        ${item.ficheiro ? '<button class="bt ouro" id="acInstalar">Instalar no relógio</button>' : '<button class="bt ouro" id="acEditar">Abrir no editor</button>'}
+        <button class="bt perigo" id="acApagar">Apagar</button>
+        <button class="bt" id="acFechar">Fechar</button>
+      </div>`;
+    el.classList.remove("escondido");
+    el.scrollIntoView({ block: "nearest" });
+    $("#acFechar").onclick = () => el.classList.add("escondido");
+    if ($("#acEditar")) $("#acEditar").onclick = () => { el.classList.add("escondido"); aoEditar(); };
+    if ($("#acInstalar")) $("#acInstalar").onclick = () => instalarDaBiblioteca(item);
+    $("#acApagar").onclick = async () => {
+      if (!confirm("Apagar \"" + item.nome + "\" da biblioteca? O relógio fica na mesma.")) return;
+      try { await api("/api/mascaras/" + item.id, null, "DELETE"); el.classList.add("escondido"); toast("Apagada"); carregarGaleria(); }
+      catch (e) { toast("⚠ " + e.message); }
+    };
+  }
+
+  /** Reinstala um ficheiro guardado. */
+  async function instalarDaBiblioteca(item) {
     carregar(true, "A ir buscar o ficheiro…");
     try {
       const b64 = (await fetch("/api/ficheiro/" + item.id + "?t=" + Date.now()).then((r) => r.text())).trim();
       if (b64.length < 500 || b64[0] === "{") throw new Error("o ficheiro já não está guardado");
       carregar(true, "A enviar para o relógio…");
       res(N.instalar((item.nome || "mascara") + ".hwt", b64), "Enviada. Escolha-a depois no pulso.");
+      $("#acoesItem").classList.add("escondido");
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
   $("#listaModelos").append(...Estudio.MODELOS.map((m) => miniatura(m, () => abrirEditor(JSON.parse(JSON.stringify({ ...m, id: undefined, nome: m.nome + " (cópia)" }))))));
