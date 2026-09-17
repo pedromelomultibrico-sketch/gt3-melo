@@ -168,6 +168,47 @@
     } catch (e) { return ""; }
   }
 
+  // ---------- ficheiros abertos de fora (tocar num .hwt, ou partilhar) ----------
+  function ficheiroDe(b64, nome) {
+    const bin = atob(b64), u = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+    const b = new Blob([u]);
+    b.name = nome || "mascara.hwt";
+    return b;
+  }
+
+  async function tratarFicheiroRecebido(p) {
+    if (!p || !p.b64) return;
+    pilha.length = 0; ir("mascaras", true);
+    const el = $("#ficheiroRecebido");
+    let nome = (p.nome || "mascara").replace(/\.hwt$/i, ""), capa = "", detalhe = "";
+    try {
+      const pac = await HWT.abrir(ficheiroDe(p.b64, p.nome));
+      nome = pac.titulo || nome;
+      capa = await capaDoHwt(pac);
+      detalhe = pac.imgs.length + " imagens" + (pac.screen ? " · " + pac.screen : "");
+    } catch (e) { detalhe = "não parece uma máscara Huawei — mesmo assim posso enviá-la"; }
+    el.innerHTML = `<b>Ficheiro recebido</b>
+      <div class="linha" style="margin:8px 0">
+        ${capa ? `<img src="${capa}" style="width:84px;height:84px;border-radius:50%;object-fit:cover;border:2px solid var(--ouro)">` : ""}
+        <div style="flex:1;min-width:140px"><b>${nome}</b><br><small class="suave">${detalhe}</small></div>
+      </div>
+      <div class="linha"><button class="bt ouro" id="btInstalarRecebido">Instalar no relógio</button><button class="bt" id="btDescartarRecebido">Agora não</button></div>`;
+    el.classList.remove("escondido");
+    $("#btDescartarRecebido").onclick = () => el.classList.add("escondido");
+    $("#btInstalarRecebido").onclick = async () => {
+      carregar(true, "A enviar para o relógio…");
+      try {
+        const envio = res(N.instalar(nome + ".hwt", p.b64), "Enviada. Veja o progresso na notificação e escolha-a depois no pulso.");
+        if (envio && envio.ok) {
+          await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa }, p.b64);
+          el.classList.add("escondido");
+          carregarGaleria();
+        }
+      } finally { carregar(false); }
+    };
+  }
+
   // ---------- galeria de máscaras ----------
   function miniatura(m, aoTocar) {
     const b = document.createElement("button"); b.className = "itemGaleria";
