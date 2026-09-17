@@ -476,21 +476,16 @@
       orig.width = fundo.width; orig.height = fundo.height;
       orig.getContext("2d").putImageData(fundo, 0, 0);
       const alvo = pac.imgs[iA];
-      let feito = null, escuroUsado = 0;
-      for (const escuro of [0.25, 0.45, 0.6, 0.72, 0.82, 0.9]) {
-        carregar(true, "A ajustar o brilho (" + Math.round(escuro * 100) + "%)…");
-        const c = document.createElement("canvas");
-        c.width = alvo.largura; c.height = alvo.altura;
-        const x = c.getContext("2d");
-        x.drawImage(orig, 0, 0, c.width, c.height);
-        x.fillStyle = "rgba(0,0,0," + escuro + ")";
-        x.fillRect(0, 0, c.width, c.height);
+      let feito = null, usou = null;
+      for (let k = 0; k < RECEITAS_AOD.length; k++) {
+        carregar(true, "A ajustar o ecrã apagado (tentativa " + (k + 1) + ")…");
         try {
-          feito = await HWT.construir(pac, [{ indice: iA, canvas: c }], null, item.nome, item.capa || null);
-          escuroUsado = escuro;
+          feito = await HWT.construir(pac, [{ indice: iA, canvas: desenhoAod(orig, alvo.largura, alvo.altura, RECEITAS_AOD[k]) }], null, item.nome, item.capa || null);
+          usou = RECEITAS_AOD[k];
           break;
-        } catch (e) { /* não coube: escurecer mais */ }
+        } catch (e) { /* não coube: receita seguinte */ }
       }
+      const escuroUsado = usou && (usou.cor ? 1 : usou.escuro || 0);
       if (!feito) throw new Error("o mostrador desta máscara é detalhado demais para caber no espaço do sempre ligado");
       carregar(true, "A enviar para o relógio…");
       const novoB64 = HWT.paraBase64(feito.bytes);
