@@ -60,7 +60,8 @@ for nome, modelo, entrada in testes:
 
 texto = "\n".join(saida)
 try:
-    urllib.request.urlopen(urllib.request.Request(U + "/ci/" + K + "/visao", data=texto.encode()), timeout=60)
+    urllib.request.urlopen(urllib.request.Request(U + "/ci/" + K + "/visao", data=texto.encode(),
+                                                  headers={"user-agent": "Mozilla/5.0 (GT3 Melo CI)"}), timeout=60)
     print("relatório enviado")
 except Exception as e:
     print("não consegui enviar o relatório:", e)
