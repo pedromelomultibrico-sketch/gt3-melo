@@ -199,6 +199,10 @@ def desenho_teste(w, h):
         f1 = f2 = ImageFont.load_default()
     d.text((C, C * 0.62), "PEDRO MELO", font=f1, fill=(240, 210, 122, 255), anchor="mm")
     d.text((C, C * 1.42), "GT3 MELO", font=f2, fill=(150, 150, 150, 255), anchor="mm")
+    # o ecrã é redondo: fora do círculo fica transparente, como nas máscaras originais
+    mascara = Image.new("L", (S, S), 0)
+    ImageDraw.Draw(mascara).ellipse((0, 0, S - 1, S - 1), fill=255)
+    im.putalpha(mascara)
     return im.resize((w, h), Image.LANCZOS).convert("RGBA")
 
 
