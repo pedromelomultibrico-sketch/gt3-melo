@@ -49,6 +49,8 @@ public class MeloActivity extends Activity {
     private PonteNucleo ponte;
     private ValueCallback<Uri[]> callbackFicheiro;
     private boolean falhou = false;
+    /** Ficheiro aberto ou partilhado para a app, à espera que a interface o trate. */
+    String ficheiroRecebido = null;
 
     private final BroadcastReceiver recetor = new BroadcastReceiver() {
         @Override
