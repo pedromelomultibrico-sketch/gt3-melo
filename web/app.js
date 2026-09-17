@@ -258,7 +258,31 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
     redesenhar();
   }
   $("#btVoltarGaleria").onclick = () => ir("mascaras");
-  $("#edNome").oninput = (e) => (m.nome = e.target.value);
+  $("#edNome").oninput = (e) => { m.nome = e.target.value; if (variante === "normal") mPrincipal.nome = e.target.value; };
+
+  function marcarVariante() {
+    $$("#variantes [data-var]").forEach((b) => b.classList.toggle("ouro", b.dataset.var === variante));
+  }
+  function trocarVariante(v) {
+    if (v === variante) return;
+    if (v === "aod" && !mPrincipal.aod) {
+      // começa como cópia do mostrador normal
+      const copia = JSON.parse(JSON.stringify({ nome: mPrincipal.nome + " — sempre ligado", fundo: mPrincipal.fundo, camadas: mPrincipal.camadas }));
+      mPrincipal.aod = Estudio.normalizar(copia);
+    }
+    variante = v;
+    m = v === "aod" ? mPrincipal.aod : mPrincipal;
+    sel = null;
+    marcarVariante();
+    $("#edNome").value = m.nome;
+    preencherFundo(); listarCamadas(); redesenhar();
+    if (v === "aod") toast("A editar o ecrã sempre ligado");
+  }
+  $$("#variantes [data-var]").forEach((b) => (b.onclick = () => trocarVariante(b.dataset.var)));
+  $("#aodLigado").onchange = (e) => {
+    mPrincipal.aodLigado = e.target.checked;
+    if (e.target.checked && !mPrincipal.aod) trocarVariante("aod");
+  };
   $$("#abasEditor button").forEach((b) => (b.onclick = () => {
     $$("#abasEditor button").forEach((x) => x.classList.toggle("ativo", x === b));
     $$(".aba").forEach((a) => a.classList.toggle("ativo", a.dataset.aba === b.dataset.aba));
