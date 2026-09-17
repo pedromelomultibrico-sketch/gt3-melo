@@ -194,7 +194,11 @@
       const itens = await api("/api/mascaras");
       el.innerHTML = "";
       if (!itens.length) el.innerHTML = '<p class="suave pequeno">Ainda não guardou nenhuma máscara.</p>';
-      itens.forEach((m) => el.append(miniatura(Estudio.normalizar(m), () => abrirEditor(Estudio.normalizar(m)))));
+      itens.forEach((m) => {
+        if (m.ficheiro) { el.append(miniatura(m, () => abrirFicheiro(m))); return; }
+        const n = Estudio.normalizar(m); n.id = m.id; n.origem = m.origem;
+        el.append(miniatura(n, () => abrirEditor(n)));
+      });
     } catch (e) { el.innerHTML = '<p class="suave pequeno">Sem ligação à biblioteca.</p>'; }
   }
   $("#btNovaMascara").onclick = () => abrirEditor(Estudio.nova());
