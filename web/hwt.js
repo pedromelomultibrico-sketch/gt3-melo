@@ -184,7 +184,7 @@
     const imgs = lerImagens(bin);
     const titulo = (desc.match(/<title>([^<]*)<\/title>/) || [])[1] || ficheiro.name;
     const screen = (desc.match(/<screen>([^<]*)<\/screen>/) || [])[1] || "";
-    return { zip, desc, honor, nomeInterno, zipInterno, bin, imgs, titulo, screen, nomeFicheiro: ficheiro.name };
+    return { zip, desc, honor, nomeInterno, zipInterno, bin, imgs, titulo, screen, bytes, nomeFicheiro: ficheiro.name };
   }
 
   function opacidade(imageData) {
