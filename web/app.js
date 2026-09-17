@@ -136,15 +136,56 @@
   $("#btVerAtualizacao").onclick = () => verAtualizacao(true);
   $("#btRecarregar").onclick = () => N.recarregar();
 
+  // ---------- biblioteca ----------
+  const ORIGENS = { minha: "feita por si", ia: "criada com IA", foto: "lida de uma foto", ficheiro: "ficheiro instalado", teste: "máscara de teste" };
+
+  /** Guarda a máscara e, se vier ficheiro, o .hwt que foi para o relógio. */
+  async function guardarNaBiblioteca(entrada, ficheiroB64) {
+    try {
+      const r = await api("/api/mascaras", entrada);
+      if (ficheiroB64) await fetch("/api/ficheiro/" + r.id, { method: "POST", body: ficheiroB64 });
+      return r;
+    } catch (e) { toast("⚠ não consegui guardar na biblioteca: " + e.message); }
+  }
+
+  /** Imagem pequena para a galeria. */
+  async function capaDoHwt(pacote) {
+    try {
+      const f = pacote.zip.file("preview/cover.jpg") || pacote.zip.file("preview/icon_small.jpg");
+      if (!f) return "";
+      const b64 = await f.async("base64");
+      return await redimensionar("data:image/jpeg;base64," + b64, 180);
+    } catch (e) { return ""; }
+  }
+
   // ---------- galeria de máscaras ----------
   function miniatura(m, aoTocar) {
     const b = document.createElement("button"); b.className = "itemGaleria";
-    const c = document.createElement("canvas"); c.width = c.height = 180;
     const s = document.createElement("span"); s.textContent = m.nome;
-    b.append(c, s); b.onclick = aoTocar;
-    const desenha = () => Estudio.desenhar(c, m, { redesenhar: desenha });
-    desenha(); setTimeout(desenha, 600);
+    if (m.capa) {
+      const img = document.createElement("img"); img.src = m.capa;
+      b.append(img, s);
+    } else {
+      const c = document.createElement("canvas"); c.width = c.height = 180;
+      b.append(c, s);
+      const desenha = () => Estudio.desenhar(c, m, { redesenhar: desenha });
+      desenha(); setTimeout(desenha, 600);
+    }
+    if (m.origem) { const o = document.createElement("small"); o.className = "suave"; o.textContent = ORIGENS[m.origem] || m.origem; b.append(o); }
+    b.onclick = aoTocar;
     return b;
+  }
+
+  /** Item que é um ficheiro .hwt guardado: reinstalar ou apagar. */
+  async function abrirFicheiro(item) {
+    if (!confirm("Instalar de novo \"" + item.nome + "\" no relógio?")) return;
+    carregar(true, "A ir buscar o ficheiro…");
+    try {
+      const b64 = (await fetch("/api/ficheiro/" + item.id + "?t=" + Date.now()).then((r) => r.text())).trim();
+      if (b64.length < 500 || b64[0] === "{") throw new Error("o ficheiro já não está guardado");
+      carregar(true, "A enviar para o relógio…");
+      res(N.instalar((item.nome || "mascara") + ".hwt", b64), "Enviada. Escolha-a depois no pulso.");
+    } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
   $("#listaModelos").append(...Estudio.MODELOS.map((m) => miniatura(m, () => abrirEditor(JSON.parse(JSON.stringify({ ...m, id: undefined, nome: m.nome + " (cópia)" }))))));
   async function carregarGaleria() {
