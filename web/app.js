@@ -377,9 +377,9 @@
       el.innerHTML = "";
       if (!itens.length) el.innerHTML = '<p class="suave pequeno">Ainda não guardou nenhuma máscara.</p>';
       itens.forEach((m) => {
-        if (m.ficheiro) { el.append(miniatura(m, () => abrirFicheiro(m))); return; }
-        const n = Estudio.normalizar(m); n.id = m.id; n.origem = m.origem;
-        el.append(miniatura(n, () => abrirEditor(n)));
+        if (m.ficheiro) { el.append(miniatura(m, () => mostrarAcoes(m, null))); return; }
+        const n = Estudio.normalizar(m); n.id = m.id; n.origem = m.origem; n.alterada = m.alterada;
+        el.append(miniatura(n, () => mostrarAcoes(n, () => abrirEditor(n))));
       });
     } catch (e) { el.innerHTML = '<p class="suave pequeno">Sem ligação à biblioteca.</p>'; }
   }
