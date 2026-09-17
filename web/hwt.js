@@ -159,8 +159,16 @@
   }
 
   async function abrir(ficheiro) {
-    const bytes = new Uint8Array(await ficheiro.arrayBuffer());
-    const zip = await JSZip.loadAsync(bytes);
+    let bytes = new Uint8Array(await ficheiro.arrayBuffer());
+    let zip = await JSZip.loadAsync(bytes);
+    // muitos sites entregam a máscara dentro de um .zip — procurar lá dentro
+    if (!zip.file("com.huawei.watchface") && !zip.file("com.honor.watchface")) {
+      const dentro = Object.keys(zip.files).filter((n) => /\.hwt$/i.test(n) && !zip.files[n].dir);
+      if (dentro.length) {
+        bytes = await zip.file(dentro[0]).async("uint8array");
+        zip = await JSZip.loadAsync(bytes);
+      }
+    }
     const desc = zip.file("description.xml") ? await zip.file("description.xml").async("string") : "";
     const honor = /<HnTheme/.test(desc);
     const nomeInterno = honor ? "com.honor.watchface" : "com.huawei.watchface";
