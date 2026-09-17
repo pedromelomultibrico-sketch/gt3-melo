@@ -461,7 +461,7 @@
       const iF = HWT.indiceFundo(pac);
       if (iF < 0) throw new Error("não encontrei o mostrador principal nesta máscara");
       const iA = HWT.indiceAod(pac, iF);
-      if (iA < 0) throw new Error("esta máscara não tem imagem de ecrã sempre ligado para substituir");
+      if (iA < 0) { carregar(false); return escolherBase(item, pac, iF); }
       const fundo = HWT.descodificar(pac.bin, pac.imgs[iF]);
       const orig = document.createElement("canvas");
       orig.width = fundo.width; orig.height = fundo.height;
