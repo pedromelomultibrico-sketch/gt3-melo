@@ -346,6 +346,16 @@
   let janelaReparacao = false;
 
   // ---------- galeria de máscaras ----------
+  /** Liga o toque longo de um item da biblioteca. */
+  function toqueLongo(b, aoSegurar) {
+    let t = null;
+    const cancelar = () => { clearTimeout(t); t = null; };
+    b.addEventListener("touchstart", () => { t = setTimeout(() => { t = null; aoSegurar(); }, 500); }, { passive: true });
+    b.addEventListener("touchend", (ev) => { if (!t) ev.preventDefault(); cancelar(); });
+    b.addEventListener("touchmove", cancelar, { passive: true });
+    b.addEventListener("contextmenu", (ev) => { ev.preventDefault(); aoSegurar(); });
+  }
+
   function miniatura(m, aoTocar) {
     const b = document.createElement("button"); b.className = "itemGaleria";
     const s = document.createElement("span"); s.textContent = m.nome;
