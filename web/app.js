@@ -244,7 +244,11 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
   function redesenhar() { if (m) Estudio.desenhar(tela, m, { estado: { ...estado, data: new Date() }, selecionada: sel, redesenhar }); }
 
   function abrirEditor(mascara) {
-    m = Estudio.normalizar(mascara); sel = null;
+    mPrincipal = Estudio.normalizar(mascara);
+    if (mPrincipal.aod) mPrincipal.aod = Estudio.normalizar(mPrincipal.aod);
+    variante = "normal"; m = mPrincipal; sel = null;
+    $("#aodLigado").checked = !!mPrincipal.aodLigado;
+    marcarVariante();
     $("#edNome").value = m.nome;
     preencherFundo(); listarCamadas();
     $$("#abasEditor button").forEach((x, i) => x.classList.toggle("ativo", i === 0));
