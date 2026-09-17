@@ -28,7 +28,7 @@
     $$(".ecra").forEach((e) => e.classList.toggle("ativo", e.id === "ecra-" + ecra));
     $$("#navegacao button").forEach((b) => b.classList.toggle("ativo", b.dataset.ecra === ecra || (ecra === "editor" && b.dataset.ecra === "mascaras")));
     window.scrollTo(0, 0);
-    if (ecra === "mascaras") carregarGaleria();
+    if (ecra === "biblioteca") carregarGaleria();
     if (ecra === "inicio") atualizarDados();
     if (ecra === "relogio") listarTransferencias();
   }
