@@ -4,7 +4,7 @@
   const DIAS = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
   const MESES = ["JAN", "FEV", "MAR", "ABR", "MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"];
   const DINAMICAS = ["hora", "minutos_ponteiros", "data", "dia_semana", "bateria", "passos", "batimentos"];
-  const NOMES = { hora: "Hora digital", minutos_ponteiros: "Ponteiros", data: "Data", dia_semana: "Dia da semana", bateria: "Bateria", passos: "Passos", batimentos: "Batimentos", texto: "Texto", anel: "Anel", marcas: "Marcas das horas" };
+  const NOMES = { hora: "Hora digital", minutos_ponteiros: "Ponteiros", data: "Data", dia_semana: "Dia da semana", bateria: "Bateria", autonomia: "Autonomia (horas que faltam)", passos: "Passos", batimentos: "Batimentos", texto: "Texto", anel: "Anel", marcas: "Marcas das horas" };
 
   const imagens = {}; // cache de imagens de fundo (dataURL -> Image)
   function imagem(src, aoCarregar) {
