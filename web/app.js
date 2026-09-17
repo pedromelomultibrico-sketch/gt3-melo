@@ -538,8 +538,7 @@
 
   /** Cabe no espaço desta imagem? (mede sem montar o ficheiro, que é lento) */
   function cabe(canvas, orcamento) {
-    const d = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
-    return !!HWT.codificarExato(d, orcamento);
+    return !!HWT.codificarExato(HWT.prepararDesenho(canvas, canvas.width, canvas.height), orcamento);
   }
 
   /** Experimenta as receitas por ordem e devolve o primeiro desenho que cabe. */
