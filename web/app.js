@@ -624,28 +624,25 @@
       const orig = document.createElement("canvas");
       orig.width = fundo.width; orig.height = fundo.height;
       orig.getContext("2d").putImageData(fundo, 0, 0);
-      const desenhar = (largura, altura, escuro) => {
-        const c = document.createElement("canvas");
-        c.width = largura; c.height = altura;
-        const x = c.getContext("2d");
-        x.drawImage(orig, 0, 0, largura, altura);
-        if (escuro) { x.fillStyle = "rgba(0,0,0," + escuro + ")"; x.fillRect(0, 0, largura, altura); }
-        return c;
-      };
       const imF = base.pac.imgs[base.iF], imA = base.pac.imgs[base.iA];
-      let feito = null, escuroUsado = 0;
-      for (const escuro of [0.25, 0.45, 0.6, 0.72, 0.82, 0.9]) {
-        carregar(true, "A ajustar o brilho (" + Math.round(escuro * 100) + "%)…");
+      const mostrador = document.createElement("canvas");
+      mostrador.width = imF.largura; mostrador.height = imF.altura;
+      mostrador.getContext("2d").drawImage(orig, 0, 0, imF.largura, imF.altura);
+      let feito = null, usou = null;
+      for (let k = 0; k < RECEITAS_AOD.length; k++) {
+        const r = RECEITAS_AOD[k];
+        carregar(true, "A ajustar o ecrã apagado (tentativa " + (k + 1) + ")…");
         try {
           feito = await HWT.construir(base.pac, [
-            { indice: base.iF, canvas: desenhar(imF.largura, imF.altura, 0) },
-            { indice: base.iA, canvas: desenhar(imA.largura, imA.altura, escuro) },
+            { indice: base.iF, canvas: mostrador },
+            { indice: base.iA, canvas: desenhoAod(orig, imA.largura, imA.altura, r) },
           ], null, item.nome, item.capa || null);
-          escuroUsado = escuro;
+          usou = r;
           break;
-        } catch (e) { /* não coube: escurecer mais */ }
+        } catch (e) { /* não coube: receita seguinte */ }
       }
       if (!feito) throw new Error("o desenho é detalhado demais para caber nesta base; tente outra");
+      const escuroUsado = usou && (usou.cor ? 1 : usou.escuro || 0);
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
       const nome = item.nome + " (sempre ligado)";
