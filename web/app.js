@@ -103,8 +103,17 @@
   $("#ficheiroInstalar").onchange = async (e) => {
     const f = e.target.files[0]; if (!f) return;
     carregar(true, "A enviar " + f.name + "…");
-    try { const b = new Uint8Array(await lerFicheiro(f)); res(N.instalar(f.name, HWT.paraBase64(b)), "Enviado para o relógio. Veja o progresso na notificação."); }
-    finally { carregar(false); e.target.value = ""; }
+    try {
+      const b = new Uint8Array(await lerFicheiro(f));
+      const b64 = HWT.paraBase64(b);
+      const envio = res(N.instalar(f.name, b64), "Enviado para o relógio. Veja o progresso na notificação.");
+      if (envio && envio.ok) {
+        let nome = f.name.replace(/\.hwt$/i, ""), capa = "";
+        try { const pac = await HWT.abrir(f); nome = pac.titulo || nome; capa = await capaDoHwt(pac); } catch (err) { /* não é .hwt */ }
+        await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa }, b64);
+        toast("Guardada na biblioteca: " + nome);
+      }
+    } finally { carregar(false); e.target.value = ""; }
   };
 
   // máscara de teste já preparada (guardada no Cloudflare)
