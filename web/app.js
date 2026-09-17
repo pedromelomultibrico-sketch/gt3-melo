@@ -209,8 +209,13 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
     if (!fotoB64) return;
     carregar(true, "A ler a fotografia…");
     try {
-      const r = await api("/api/ia/exec", { chave: CHAVE, modelo: "@cf/meta/llama-3.2-11b-vision-instruct", entrada: { imagem_b64: fotoB64, prompt: PEDIDO_FOTO, max_tokens: 1200 } });
-      const t = r.resposta && (r.resposta.response || r.resposta.description || JSON.stringify(r.resposta));
+      const mensagens = [{ role: "user", content: [
+        { type: "text", text: PEDIDO_FOTO },
+        { type: "image_url", image_url: { url: "data:image/jpeg;base64," + fotoB64 } },
+      ] }];
+      const r = await api("/api/ia/exec", { chave: CHAVE, modelo: "@cf/meta/llama-4-scout-17b-16e-instruct", entrada: { messages: mensagens, max_tokens: 1400 } });
+      const res0 = r.resposta || {};
+      const t = (res0.choices && res0.choices[0] && res0.choices[0].message && res0.choices[0].message.content) || res0.response || res0.description || JSON.stringify(res0);
       abrirEditor(extrairJson(t));
       toast("Desenho lido da foto — afine no editor");
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
