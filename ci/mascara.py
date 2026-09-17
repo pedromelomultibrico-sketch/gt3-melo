@@ -114,7 +114,11 @@ def codificar_exato(img, alvo):
         tokens = []
         ant, n = -1, 0
         for i in range(0, len(dados), 4):
-            cor = ((dados[i + 2] & m) | ((dados[i + 1] & m) << 8) | ((dados[i] & m) << 16) | (255 << 24))
+            A = dados[i + 3]
+            if A == 0:
+                cor = 0
+            else:
+                cor = ((dados[i + 2] & m) | ((dados[i + 1] & m) << 8) | ((dados[i] & m) << 16) | (A << 24))
             if cor == ant:
                 n += 1
             else:
