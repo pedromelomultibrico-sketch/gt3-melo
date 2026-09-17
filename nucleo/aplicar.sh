@@ -38,13 +38,10 @@ open(p, "w").write(s)
 PY
 base64 -d "$AQUI/assinatura.b64" > "$GB/app/gt3melo.jks"
 
-cat > "$GB/app/src/mainline/res/values/strings.xml" <<'XML'
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string translatable="false" name="app_name">GT3 Melo</string>
-    <string translatable="false" name="title_activity_controlcenter">GT3 Melo — avançado</string>
-</resources>
-XML
+S="$GB/app/src/mainline/res/values/strings.xml"
+sed -i 's#name="app_name">[^<]*<#name="app_name">GT3 Melo<#' "$S"
+sed -i 's#name="title_activity_controlcenter">[^<]*<#name="title_activity_controlcenter">GT3 Melo — avançado<#' "$S"
+sed -i 's#name="gadgetbridge_running">[^<]*<#name="gadgetbridge_running">GT3 Melo ligado ao relógio<#' "$S"
 
 # 3) Proguard: não apagar os métodos chamados pelo JavaScript
 cat >> "$GB/app/proguard-rules.pro" <<'PRO'
