@@ -231,6 +231,7 @@
         try { m.fundo = { ...m.fundo, tipo: "imagem", imagem: await iaFundo(m.prompt_fundo), escurecer: 25 }; } catch (e) { toast("Fundo com IA falhou; ficou a cor"); }
       }
       delete m.prompt_fundo;
+      m.origem = "ia";
       abrirEditor(m);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   };
