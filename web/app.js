@@ -556,7 +556,9 @@
     const c = document.createElement("canvas");
     c.width = largura; c.height = altura;
     const x = c.getContext("2d");
+    if (receita.suave) x.filter = "blur(" + receita.suave + "px)";
     x.drawImage(origem, 0, 0, largura, altura);
+    x.filter = "none";
     const d = x.getImageData(0, 0, largura, altura);
     const p = d.data;
     const corFixa = receita.cor ? [parseInt(receita.cor.slice(1, 3), 16), parseInt(receita.cor.slice(3, 5), 16), parseInt(receita.cor.slice(5, 7), 16)] : null;
