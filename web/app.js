@@ -190,12 +190,13 @@
     if (!p || !p.b64) return;
     pilha.length = 0; ir("mascaras", true);
     const el = $("#ficheiroRecebido");
-    let nome = (p.nome || "mascara").replace(/\.hwt$/i, ""), capa = "", detalhe = "";
+    let nome = (p.nome || "mascara").replace(/\.zip$/i, "").replace(/\.hwt$/i, ""), capa = "", detalhe = "";
     try {
       const pac = await HWT.abrir(ficheiroDe(p.b64, p.nome));
       nome = pac.titulo || nome;
       capa = await capaDoHwt(pac);
       detalhe = pac.imgs.length + " imagens" + (pac.screen ? " · " + pac.screen : "");
+      p.b64 = HWT.paraBase64(pac.bytes); // se vinha dentro de um .zip, vai só a máscara
     } catch (e) { detalhe = "não parece uma máscara Huawei — mesmo assim posso enviá-la"; }
     el.innerHTML = `<b>Ficheiro recebido</b>
       <div class="linha" style="margin:8px 0">
