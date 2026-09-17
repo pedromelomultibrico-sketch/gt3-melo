@@ -445,6 +445,55 @@
     };
   }
 
+  /**
+   * Pega numa máscara guardada e põe o mostrador dela também no ecrã sempre ligado.
+   * A imagem do sempre ligado tem muito menos espaço, por isso escurece-se por passos
+   * até o desenho caber — o que também é melhor para a bateria e para o ecrã.
+   */
+  async function converterSempreLigado(item) {
+    carregar(true, "A ir buscar a máscara…");
+    try {
+      const b64 = (await fetch("/api/ficheiro/" + item.id + "?t=" + Date.now()).then((r) => r.text())).trim();
+      if (b64.length < 500 || b64[0] === "{") throw new Error("o ficheiro desta máscara já não está guardado");
+      const pac = await HWT.abrir(ficheiroDe(b64, item.nome + ".hwt"));
+      const iF = HWT.indiceFundo(pac);
+      if (iF < 0) throw new Error("não encontrei o mostrador principal nesta máscara");
+      const iA = HWT.indiceAod(pac, iF);
+      if (iA < 0) throw new Error("esta máscara não tem imagem de ecrã sempre ligado para substituir");
+      const fundo = HWT.descodificar(pac.bin, pac.imgs[iF]);
+      const orig = document.createElement("canvas");
+      orig.width = fundo.width; orig.height = fundo.height;
+      orig.getContext("2d").putImageData(fundo, 0, 0);
+      const alvo = pac.imgs[iA];
+      let feito = null, escuroUsado = 0;
+      for (const escuro of [0.25, 0.45, 0.6, 0.72, 0.82, 0.9]) {
+        carregar(true, "A ajustar o brilho (" + Math.round(escuro * 100) + "%)…");
+        const c = document.createElement("canvas");
+        c.width = alvo.largura; c.height = alvo.altura;
+        const x = c.getContext("2d");
+        x.drawImage(orig, 0, 0, c.width, c.height);
+        x.fillStyle = "rgba(0,0,0," + escuro + ")";
+        x.fillRect(0, 0, c.width, c.height);
+        try {
+          feito = await HWT.construir(pac, [{ indice: iA, canvas: c }], null, item.nome, item.capa || null);
+          escuroUsado = escuro;
+          break;
+        } catch (e) { /* não coube: escurecer mais */ }
+      }
+      if (!feito) throw new Error("o mostrador desta máscara é detalhado demais para caber no espaço do sempre ligado");
+      carregar(true, "A enviar para o relógio…");
+      const novoB64 = HWT.paraBase64(feito.bytes);
+      const nome = item.nome + " (sempre ligado)";
+      const envio = res(N.instalar(nome + ".hwt", novoB64),
+        "Enviada. No relógio, escolha esta máscara e ligue o \"Mostrar sempre\"." + (escuroUsado > 0.5 ? " Ficou mais escura para caber." : ""));
+      if (envio && envio.ok) {
+        await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa: item.capa || "" }, novoB64);
+        $("#acoesItem").classList.add("escondido");
+        carregarGaleria();
+      }
+    } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+  }
+
   /** Reinstala um ficheiro guardado. */
   async function instalarDaBiblioteca(item) {
     carregar(true, "A ir buscar o ficheiro…");
