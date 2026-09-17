@@ -537,17 +537,28 @@
   }
 
   /** Cabe no espaço desta imagem? (mede sem montar o ficheiro, que é lento) */
-  function cabe(canvas, orcamento) {
-    return !!HWT.codificarExato(HWT.prepararDesenho(canvas, canvas.width, canvas.height), orcamento);
+  /** Cabe no espaço? E quanto do desenho fica aceso? */
+  function medir(canvas, orcamento) {
+    const d = HWT.prepararDesenho(canvas, canvas.width, canvas.height);
+    let acesos = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 0 && d[i] + d[i + 1] + d[i + 2] > 24) acesos++;
+    return { cabe: !!HWT.codificarExato(d, orcamento), aceso: acesos / (d.length / 4) };
   }
 
-  /** Experimenta as receitas por ordem e devolve o primeiro desenho que cabe. */
-  function ajustar(origem, largura, altura, orcamento, receitas, fazer) {
+  /**
+   * Experimenta as receitas por ordem e devolve o primeiro desenho que cabe
+   * e que ainda deixa ver alguma coisa (senão ficaria um mostrador preto).
+   */
+  function ajustar(origem, largura, altura, orcamento, receitas, fazer, minimoAceso) {
+    let quaseBoa = null;
     for (let k = 0; k < receitas.length; k++) {
       const c = fazer(origem, largura, altura, receitas[k]);
-      if (cabe(c, orcamento)) return { canvas: c, receita: receitas[k], passo: k };
+      const m = medir(c, orcamento);
+      if (!m.cabe) continue;
+      if (m.aceso >= (minimoAceso || 0)) return { canvas: c, receita: receitas[k], passo: k, aceso: m.aceso };
+      if (!quaseBoa || m.aceso > quaseBoa.aceso) quaseBoa = { canvas: c, receita: receitas[k], passo: k, aceso: m.aceso };
     }
-    return null;
+    return quaseBoa;
   }
 
   function desenhoAod(origem, largura, altura, receita) {
