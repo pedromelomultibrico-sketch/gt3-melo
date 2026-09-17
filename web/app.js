@@ -607,6 +607,7 @@
         "Enviada. No relógio, escolha-a e ligue o \"Mostrar sempre\"." + (escuroUsado > 0.5 ? " Ficou mais escura para caber." : ""));
       if (envio && envio.ok) {
         await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa: item.capa || "" }, b64);
+        if (!base.item.basePadrao) { base.item.basePadrao = true; try { await api("/api/mascaras", base.item); } catch (e) { /* nada */ } }
         $("#acoesItem").classList.add("escondido");
         carregarGaleria();
       }
