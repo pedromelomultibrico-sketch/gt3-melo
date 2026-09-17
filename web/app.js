@@ -405,6 +405,46 @@
     };
   }
 
+  /** Toque longo: mover a máscara na biblioteca ou apagá-la. */
+  function mostrarOrganizar(item, itens) {
+    const el = $("#acoesItem");
+    const i = itens.findIndex((x) => x.id === item.id);
+    el.innerHTML = `<b>Organizar: ${item.nome}</b>
+      <p class="suave pequeno">Posição ${i + 1} de ${itens.length}</p>
+      <div class="linha">
+        <button class="bt" id="orgEsq" ${i <= 0 ? "disabled" : ""}>◀ Mover</button>
+        <button class="bt" id="orgDir" ${i >= itens.length - 1 ? "disabled" : ""}>Mover ▶</button>
+        <button class="bt" id="orgTopo" ${i <= 0 ? "disabled" : ""}>Pôr em primeiro</button>
+        <button class="bt perigo" id="orgApagar">Apagar</button>
+        <button class="bt" id="orgFechar">Fechar</button>
+      </div>`;
+    el.classList.remove("escondido");
+    el.scrollIntoView({ block: "nearest" });
+    $("#orgFechar").onclick = () => el.classList.add("escondido");
+    const mover = async (destino) => {
+      const novos = itens.slice();
+      novos.splice(destino, 0, novos.splice(i, 1)[0]);
+      carregar(true, "A arrumar…");
+      try {
+        for (let k = 0; k < novos.length; k++) {
+          if (novos[k].ordem === k) continue;
+          novos[k].ordem = k;
+          await api("/api/mascaras", novos[k]);
+        }
+        el.classList.add("escondido");
+        carregarGaleria();
+      } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+    };
+    if (i > 0) { $("#orgEsq").onclick = () => mover(i - 1); $("#orgTopo").onclick = () => mover(0); }
+    if (i < itens.length - 1) $("#orgDir").onclick = () => mover(i + 1);
+    $("#orgApagar").onclick = async () => {
+      if (!confirm("Apagar \"" + item.nome + "\" da biblioteca? O relógio fica na mesma.")) return;
+      carregar(true, "A apagar…");
+      try { await api("/api/mascaras/" + item.id, null, "DELETE"); el.classList.add("escondido"); toast("Apagada"); carregarGaleria(); }
+      catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+    };
+  }
+
   /** Reinstala um ficheiro guardado. */
   async function instalarDaBiblioteca(item) {
     carregar(true, "A ir buscar o ficheiro…");
