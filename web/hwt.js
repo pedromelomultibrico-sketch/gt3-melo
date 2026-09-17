@@ -179,9 +179,30 @@
     return { zip, desc, honor, nomeInterno, zipInterno, bin, imgs, titulo, screen, nomeFicheiro: ficheiro.name };
   }
 
+  function opacidade(imageData) {
+    const d = imageData.data;
+    let op = 0;
+    for (let i = 3; i < d.length; i += 4) if (d[i] > 0) op++;
+    return op / (d.length / 4);
+  }
+
+  /**
+   * Escolhe a imagem a substituir: o fundo principal do mostrador.
+   * As máscaras redondas têm ~78% de píxeis opacos (o círculo dentro do quadrado);
+   * imagens com pouca opacidade são sobreposições do ecrã sempre ligado ou
+   * pequenos desenhos — trocá-las estraga o mostrador.
+   */
   function indiceFundo(pacote) {
-    let melhor = -1, area = 0;
-    pacote.imgs.forEach((im, i) => { const a = im.largura * im.altura; if (a > area) { area = a; melhor = i; } });
+    let melhor = -1, area = 0, houveGrande = false;
+    pacote.imgs.forEach((im, i) => {
+      if (Math.min(im.largura, im.altura) < 200) return;
+      houveGrande = true;
+      const op = opacidade(descodificar(pacote.bin, im));
+      im.opacidade = op;
+      const a = im.largura * im.altura;
+      if (op > 0.6 && a > area) { area = a; melhor = i; }
+    });
+    pacote.semFundo = melhor < 0 && houveGrande;
     return melhor;
   }
 
