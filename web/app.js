@@ -339,6 +339,8 @@
     };
   }
 
+  let janelaReparacao = false;
+
   // ---------- galeria de máscaras ----------
   function miniatura(m, aoTocar) {
     const b = document.createElement("button"); b.className = "itemGaleria";
