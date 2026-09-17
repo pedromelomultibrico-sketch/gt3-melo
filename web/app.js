@@ -272,7 +272,8 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
       const r = await api("/api/ia/exec", { chave: CHAVE, modelo: "@cf/meta/llama-4-scout-17b-16e-instruct", entrada: { messages: mensagens, max_tokens: 1400 } });
       const res0 = r.resposta || {};
       const t = (res0.choices && res0.choices[0] && res0.choices[0].message && res0.choices[0].message.content) || res0.response || res0.description || JSON.stringify(res0);
-      abrirEditor(extrairJson(t));
+      const desenho = extrairJson(t); desenho.origem = "foto";
+      abrirEditor(desenho);
       toast("Desenho lido da foto — afine no editor");
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   };
