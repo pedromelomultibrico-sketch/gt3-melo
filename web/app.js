@@ -461,7 +461,16 @@
       const iF = HWT.indiceFundo(pac);
       if (iF < 0) throw new Error("não encontrei o mostrador principal nesta máscara");
       const iA = HWT.indiceAod(pac, iF);
-      if (iA < 0) { carregar(false); return escolherBase(item, pac, iF); }
+      if (iA < 0) {
+        // sem espaço de sempre ligado: usa a base habitual, se já houver uma
+        const guardada = await baseHabitual();
+        if (guardada) {
+          toast("Sem ecrã apagado próprio — a usar a base " + guardada.item.nome);
+          return usarBase(item, pac, iF, guardada);
+        }
+        carregar(false);
+        return escolherBase(item, pac, iF);
+      }
       const fundo = HWT.descodificar(pac.bin, pac.imgs[iF]);
       const orig = document.createElement("canvas");
       orig.width = fundo.width; orig.height = fundo.height;
