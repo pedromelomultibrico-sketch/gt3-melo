@@ -64,6 +64,39 @@ i = s.index('android:name=".activities.ControlCenterv2"')
 j = s.index('</activity>', i)
 bloco = s[i:j].replace('<category android:name="android.intent.category.LAUNCHER" />', '')
 s = s[:i] + bloco + s[j:]
+filtros = ''
+for mime in ["application/zip", "application/x-zip-compressed", "application/octet-stream"]:
+    filtros += '''
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:mimeType="%s" />
+            </intent-filter>''' % mime
+# pelo nome do ficheiro, quando o telemovel nao sabe o tipo
+filtros += '''
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:scheme="file" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />'''
+p = '/.*'
+for _ in range(6):
+    filtros += '\\n                <data android:pathPattern="%s\\\\.hwt" />' % p
+    p += '\\\\..*'
+filtros += '''
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>'''
+
 nova = '''<activity
             android:name=".melo.MeloActivity"
             android:label="GT3 Melo"
@@ -75,10 +108,17 @@ nova = '''<activity
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            </intent-filter>''' + filtros + '''
         </activity>
         <activity
             android:name=".activities.ControlCenterv2"'''
+
+# tirar os filtros genericos do ecra antigo, para nao aparecerem duas entradas iguais
+ini = s.find('<!-- to receive the firmwares from the download content provider -->')
+fim = s.find('<data android:mimeType="*/*" />', ini)
+if ini > 0 and fim > ini:
+    fim = s.find('</intent-filter>', fim) + len('</intent-filter>')
+    s = s[:ini] + s[fim:]
 s = s.replace('<activity\n            android:name=".activities.ControlCenterv2"', nova, 1)
 assert s != antes and '.melo.MeloActivity' in s, "manifesto não alterado"
 open(p, "w").write(s)
