@@ -57,8 +57,13 @@
   }
   window.aoNucleo = function (tipo, dados) {
     if (tipo === "dispositivo" || tipo === "retomar") mostrarDispositivo(dados);
-    if (tipo === "retomar") atualizarDados();
+    if (tipo === "retomar") { atualizarDados(); verFicheiroPendente(); }
+    if (tipo === "ficheiro") tratarFicheiroRecebido(dados);
   };
+  function verFicheiroPendente() {
+    const p = N.ficheiroPendente();
+    if (p) tratarFicheiroRecebido(p);
+  }
 
   function atualizarDados() {
     mostrarDispositivo(N.dispositivos());
