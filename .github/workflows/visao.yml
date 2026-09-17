@@ -1,0 +1,10 @@
+name: Testar modelos de visao
+on:
+  workflow_dispatch:
+jobs:
+  visao:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q pillow
+      - run: python3 ci/testar_visao.py
