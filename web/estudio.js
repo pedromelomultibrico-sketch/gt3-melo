@@ -127,6 +127,7 @@
       case "data": texto(ctx, v.data, c); break;
       case "dia_semana": texto(ctx, v.dia, c); break;
       case "bateria": texto(ctx, "▮ " + v.bateria + "%", c); break;
+      case "autonomia": texto(ctx, v.autonomia, c); break;
       case "passos": texto(ctx, "👣 " + v.passos.toLocaleString("pt-PT"), c); break;
       case "batimentos": texto(ctx, "♥ " + v.fc, c); break;
       case "texto": texto(ctx, c.texto || "", c); break;
