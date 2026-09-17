@@ -420,7 +420,12 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
         fig.onclick = () => { alvoHwt = i; mini.querySelectorAll("figure").forEach((x) => x.classList.remove("alvo")); fig.classList.add("alvo"); };
         mini.append(fig);
       });
+      alvoAod = HWT.indiceAod(pacoteHwt, alvoHwt);
       const fundo = pacoteHwt.imgs[alvoHwt];
+      const aod = alvoAod >= 0 ? pacoteHwt.imgs[alvoAod] : null;
+      const linhaAod = aod
+        ? `<br>Sempre ligado: imagem ${aod.largura}×${aod.altura} encontrada.`
+        : "<br>Esta base não traz imagem de ecrã sempre ligado.";
       const aviso = alvoHwt < 0
         ? "<br>⚠ Esta base não tem fundo principal para substituir (só sobreposições). Escolha outra máscara."
         : "";
