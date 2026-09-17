@@ -91,6 +91,14 @@ public class PonteNucleo {
         return BuildConfig.VERSION_NAME;
     }
 
+    /** Devolve (uma só vez) o ficheiro que abriu a app, em JSON: {nome, b64}. */
+    @JavascriptInterface
+    public String ficheiroPendente() {
+        String f = act.ficheiroRecebido;
+        act.ficheiroRecebido = null;
+        return f == null ? "" : f;
+    }
+
     @JavascriptInterface
     public String dispositivos() {
         try {
