@@ -118,6 +118,7 @@ public class MeloActivity extends Activity {
         });
 
         carregar();
+        tratarIntent(getIntent());
 
         SharedPreferences prefs = GBApplication.getPrefs().getPreferences();
         if (prefs.getBoolean("first_run", true)) {
