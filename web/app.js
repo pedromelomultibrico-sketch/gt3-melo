@@ -407,6 +407,7 @@
       const itens = await api("/api/mascaras");
       el.innerHTML = "";
       if (!itens.length) el.innerHTML = '<p class="suave pequeno">Ainda não guardou nenhuma máscara.</p>';
+      if (!janelaReparacao) { janelaReparacao = true; setTimeout(() => { janelaReparacao = false; repararCapas(itens); }, 300); }
       itens.forEach((m) => {
         if (m.ficheiro) { el.append(miniatura(m, () => mostrarAcoes(m, null))); return; }
         const n = Estudio.normalizar(m); n.id = m.id; n.origem = m.origem; n.alterada = m.alterada;
