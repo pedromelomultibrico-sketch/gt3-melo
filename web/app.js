@@ -520,6 +520,36 @@
     { limiar: 140, cor: "#d4af37" }, { limiar: 180, cor: "#d4af37" }, { limiar: 210, cor: "#ffffff" },
   ];
 
+  /** Formas de aliviar o mostrador: desfocar e reduzir cores até caber. */
+  const RECEITAS_FUNDO = [
+    {}, { suave: 1 }, { suave: 2 }, { suave: 3 }, { suave: 5 }, { suave: 8 }, { suave: 12 },
+  ];
+
+  function desenhoFundo(origem, largura, altura, receita) {
+    const c = document.createElement("canvas");
+    c.width = largura; c.height = altura;
+    const x = c.getContext("2d");
+    if (receita.suave) x.filter = "blur(" + receita.suave + "px)";
+    x.drawImage(origem, 0, 0, largura, altura);
+    x.filter = "none";
+    return c;
+  }
+
+  /** Cabe no espaço desta imagem? (mede sem montar o ficheiro, que é lento) */
+  function cabe(canvas, orcamento) {
+    const d = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data;
+    return !!HWT.codificarExato(d, orcamento);
+  }
+
+  /** Experimenta as receitas por ordem e devolve o primeiro desenho que cabe. */
+  function ajustar(origem, largura, altura, orcamento, receitas, fazer) {
+    for (let k = 0; k < receitas.length; k++) {
+      const c = fazer(origem, largura, altura, receitas[k]);
+      if (cabe(c, orcamento)) return { canvas: c, receita: receitas[k], passo: k };
+    }
+    return null;
+  }
+
   function desenhoAod(origem, largura, altura, receita) {
     const c = document.createElement("canvas");
     c.width = largura; c.height = altura;
