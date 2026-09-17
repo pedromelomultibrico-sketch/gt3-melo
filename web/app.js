@@ -124,7 +124,8 @@
       const b64 = t.split("\n").slice(1).join("").trim();
       if (b64.length < 1000) throw new Error("ainda não há máscara de teste preparada");
       carregar(true, "A enviar para o relógio…");
-      res(N.instalar("gt3-melo-teste.hwt", b64), "Enviada. Veja o progresso na notificação e depois escolha-a no pulso.");
+      const envio = res(N.instalar("gt3-melo-teste.hwt", b64), "Enviada. Veja o progresso na notificação e depois escolha-a no pulso.");
+      if (envio && envio.ok) await guardarNaBiblioteca({ nome: "GT3 Melo teste", origem: "teste", ficheiro: true, capa: "" }, b64);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   };
 
