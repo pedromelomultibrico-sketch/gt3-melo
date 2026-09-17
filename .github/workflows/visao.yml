@@ -1,10 +1,20 @@
 name: Testar modelos de visao
 on:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   visao:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: pip install -q pillow
-      - run: python3 ci/testar_visao.py
+      - run: python3 ci/testar_visao.py > ci/relatorio-visao.txt 2>&1 || true
+      - run: |
+          cat ci/relatorio-visao.txt
+          git config user.name "GT3 Melo CI"
+          git config user.email "ci@gt3melo.local"
+          git add ci/relatorio-visao.txt
+          git commit -m "relatorio visao [skip ci]" || exit 0
+          git pull --rebase origin main
+          git push
