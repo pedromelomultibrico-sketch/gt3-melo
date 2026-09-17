@@ -463,9 +463,9 @@
       const iA = HWT.indiceAod(pac, iF);
       if (iA < 0) {
         // sem espaço de sempre ligado: usa a base habitual, se já houver uma
-        const guardada = await baseHabitual();
+        const guardada = (await baseHabitual()) || (await baseIncluida());
         if (guardada) {
-          toast("Sem ecrã apagado próprio — a usar a base " + guardada.item.nome);
+          toast("Sem ecrã apagado próprio — a usar a " + guardada.item.nome);
           return usarBase(item, pac, iF, guardada);
         }
         carregar(false);
