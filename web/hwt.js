@@ -93,8 +93,9 @@
     const m = bits >= 8 ? 0xff : (0xff << (8 - bits)) & 0xff;
     let ant = -1, n = 0;
     for (let i = 0; i < px.length; i += 4) {
-      const R = px[i] & m, G = px[i + 1] & m, B = px[i + 2] & m, A = 255;
-      const cor = (B | (G << 8) | (R << 16) | (A << 24)) >>> 0;
+      const A = px[i + 3];
+      const R = px[i] & m, G = px[i + 1] & m, B = px[i + 2] & m;
+      const cor = A === 0 ? 0 : (B | (G << 8) | (R << 16) | (A << 24)) >>> 0;
       if (cor === ant) n++;
       else { if (n) t.push({ cor: ant, n }); ant = cor; n = 1; }
     }
