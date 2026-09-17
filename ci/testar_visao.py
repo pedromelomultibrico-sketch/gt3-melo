@@ -49,9 +49,17 @@ testes = [
 
 saida = []
 for nome, modelo, entrada in testes:
-    r = chamar("/api/ia/exec", {"chave": K, "modelo": modelo, "entrada": entrada})
+    try:
+        r = chamar("/api/ia/exec", {"chave": K, "modelo": modelo, "entrada": entrada})
+    except Exception as e:
+        import traceback
+        r = "falhou: " + traceback.format_exc()[-400:]
     saida.append("== %s (%s)\n%s\n" % (nome, modelo, r))
     print(saida[-1])
 
 texto = "\n".join(saida)
-urllib.request.urlopen(urllib.request.Request(U + "/ci/" + K + "/visao", data=texto.encode()))
+try:
+    urllib.request.urlopen(urllib.request.Request(U + "/ci/" + K + "/visao", data=texto.encode()), timeout=60)
+    print("relatório enviado")
+except Exception as e:
+    print("não consegui enviar o relatório:", e)
