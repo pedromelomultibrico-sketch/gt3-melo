@@ -261,5 +261,5 @@
     return btoa(s);
   }
 
-  window.HWT = { abrir, lerImagens, descodificar, paraDataURL, indiceFundo, construir, codificarExato, paraBase64 };
+  window.HWT = { abrir, lerImagens, descodificar, paraDataURL, indiceFundo, construir, codificarExato, paraBase64, opacidade };
 })();
