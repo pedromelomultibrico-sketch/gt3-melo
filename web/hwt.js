@@ -212,8 +212,14 @@
     const c = document.createElement("canvas");
     c.width = im.largura; c.height = im.altura;
     const ctx = c.getContext("2d");
+    // o mostrador é redondo: fora do círculo fica transparente, como no original
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(c.width / 2, c.height / 2, Math.min(c.width, c.height) / 2, 0, Math.PI * 2);
+    ctx.clip();
     ctx.fillStyle = "#000"; ctx.fillRect(0, 0, c.width, c.height);
     ctx.drawImage(canvasFonte, 0, 0, c.width, c.height);
+    ctx.restore();
     const px = ctx.getImageData(0, 0, c.width, c.height).data;
     const alvo = im.fim - im.dados;
     const cod = codificarExato(px, alvo);
