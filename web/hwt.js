@@ -238,7 +238,7 @@
     const bin = new Uint8Array(pacote.bin);
     let bitsMin = 8;
     for (const t of trocas) {
-      const r = trocarImagem(pacote, t.indice, t.canvas);
+      const r = trocarImagem(pacote, t.indice, t.canvas, t.transparente);
       bin.set(r.bytes, pacote.imgs[t.indice].dados);
       bitsMin = Math.min(bitsMin, r.bits);
     }
