@@ -892,7 +892,7 @@
     const lista = $("#listaBases");
     candidatas.forEach((c) => {
       const b = document.createElement("button");
-      b.innerHTML = `${c.item.nome}<small>${c.pac.imgs[c.iF].largura}×${c.pac.imgs[c.iF].altura} · sempre ligado ${c.pac.imgs[c.iA].largura}×${c.pac.imgs[c.iA].altura}</small>`;
+      b.innerHTML = `${c.item.nome}<small>${c.pac.imgs[c.iF].largura}×${c.pac.imgs[c.iF].altura} · sempre ligado ${c.alvo.im.largura}×${c.alvo.im.altura}${c.alvo.onde === "aod" ? " (próprio)" : ""}</small>`;
       b.onclick = () => { el.classList.add("escondido"); abrirEditorAodComBase(item, orig, c); };
       lista.append(b);
     });
