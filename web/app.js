@@ -896,6 +896,34 @@
     });
   }
 
+  /**
+   * Instala uma máscara desenhada por mim. Como não é um ficheiro .hwt, o desenho
+   * assenta numa máscara base — a habitual, ou a que vem com a app.
+   */
+  async function instalarDesenho(item) {
+    carregar(true, "A preparar o desenho…");
+    try {
+      const base = (await baseHabitual()) || (await baseIncluida());
+      if (!base) throw new Error("não há nenhuma máscara base guardada; instale primeiro uma máscara .hwt");
+      const m = Estudio.normalizar(item);
+      const orig = renderDe(m, true, 466);
+      const imF = base.pac.imgs[base.iF];
+      carregar(true, "A encaixar o mostrador…");
+      const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
+      if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base");
+      carregar(true, "A montar o ficheiro…");
+      const capa = renderDe(m, false, 466).toDataURL("image/jpeg", 0.9);
+      const feito = await HWT.construir(base.pac, [{ indice: base.iF, canvas: mostrador.canvas }], null, item.nome, capa);
+      carregar(true, "A enviar para o relógio…");
+      const b64 = HWT.paraBase64(feito.bytes);
+      const suave = mostrador.receita.suave || 0;
+      res(N.instalar((item.nome || "mascara") + ".hwt", b64),
+        "Enviada. Escolha-a depois no pulso. Os ponteiros e números são os da " + base.item.nome + "."
+        + (suave ? " O desenho foi suavizado " + suave + "px para caber." : ""));
+      $("#acoesItem").classList.add("escondido");
+    } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+  }
+
   /** Reinstala um ficheiro guardado. */
   async function instalarDaBiblioteca(item) {
     carregar(true, "A ir buscar o ficheiro…");
