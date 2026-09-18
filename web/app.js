@@ -884,7 +884,7 @@
     candidatas.forEach((c) => {
       const b = document.createElement("button");
       b.innerHTML = `${c.item.nome}<small>${c.pac.imgs[c.iF].largura}×${c.pac.imgs[c.iF].altura} · sempre ligado ${c.pac.imgs[c.iA].largura}×${c.pac.imgs[c.iA].altura}</small>`;
-      b.onclick = () => usarBase(item, pacOrigem, iF, c);
+      b.onclick = () => { el.classList.add("escondido"); abrirEditorAodComBase(item, pacOrigem, iF, c); };
       lista.append(b);
     });
   }
