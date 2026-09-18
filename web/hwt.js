@@ -340,7 +340,10 @@
 
   /** Codifica um desenho para caber, byte a byte, no espaço da imagem indicada. */
   function trocarImagem(pacote, indice, canvasFonte, transparente) {
-    const im = pacote.imgs[indice];
+    return trocarImagemEm(pacote.bin, pacote.imgs[indice], canvasFonte, transparente);
+  }
+
+  function trocarImagemEm(bin, im, canvasFonte, transparente) {
     const px = prepararDesenho(canvasFonte, im.largura, im.altura, transparente);
     const alvo = im.fim - im.dados;
     const cod = codificarExato(px, alvo);
