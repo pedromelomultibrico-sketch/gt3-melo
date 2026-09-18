@@ -202,6 +202,55 @@
   </section>
 
   <!-- MAIS -->
+  <!-- EDITOR DO SEMPRE LIGADO -->
+  <section id="ecra-aod" class="ecra">
+    <div class="linhaTitulo">
+      <button class="bt pequeno" id="btVoltarAod">‹ Biblioteca</button>
+      <b id="aodNome">Máscara</b>
+    </div>
+
+    <div class="cartao escondido" id="aodAviso"></div>
+
+    <div class="duplo">
+      <figure>
+        <canvas id="aodMostrador" width="466" height="466"></canvas>
+        <figcaption>Mostrador</figcaption>
+      </figure>
+      <figure>
+        <canvas id="aodApagado" width="466" height="466"></canvas>
+        <figcaption>Sempre ligado</figcaption>
+      </figure>
+    </div>
+
+    <div class="cartao">
+      <label>Quanto fica aceso <b id="aodQuantoV">12%</b></label>
+      <input type="range" id="aodQuanto" min="1" max="30" step="1" value="12">
+      <label>Cor</label>
+      <div class="linha" id="aodCores">
+        <button class="bt pequeno" data-cor="">Cores originais</button>
+        <button class="bt pequeno ouro" data-cor="#ffffff">Branco</button>
+        <button class="bt pequeno" data-cor="#d4af37">Dourado</button>
+        <button class="bt pequeno" data-cor="pers">Outra…</button>
+        <input type="color" id="aodCorPers" value="#4fc3f7" class="escondido">
+      </div>
+      <label>Suavizar <b id="aodSuaveV">1 px</b></label>
+      <input type="range" id="aodSuave" min="0" max="4" step="1" value="1">
+      <label>O que acende</label>
+      <select id="aodPolo">
+        <option value="auto">Automático</option>
+        <option value="claro">As partes claras do mostrador</option>
+        <option value="escuro">As partes escuras (mostradores brancos)</option>
+      </select>
+      <p class="pequeno" id="aodEspaco">—</p>
+      <button class="bt pequeno escondido" id="aodMaximo">Pôr no máximo que cabe</button>
+    </div>
+
+    <div class="linha" id="aodAcoes">
+      <button class="bt ouro" id="aodInstalar">Instalar no relógio</button>
+      <button class="bt escondido" id="aodTrocarBase">Escolher outra máscara de suporte</button>
+    </div>
+  </section>
+
   <section id="ecra-mais" class="ecra">
     <h3>Sobre</h3>
     <div class="cartao">
