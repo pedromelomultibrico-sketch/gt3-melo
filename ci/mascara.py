@@ -122,7 +122,7 @@ def codificar_exato(img, alvo):
             if A == 0:
                 cor = 0
             else:
-                cor = ((dados[i + 2] & m) | ((dados[i + 1] & m) << 8) | ((dados[i] & m) << 16) | (A << 24))
+                cor = (q(dados[i + 2]) | (q(dados[i + 1]) << 8) | (q(dados[i]) << 16) | (A << 24))
             if cor == ant:
                 n += 1
             else:
