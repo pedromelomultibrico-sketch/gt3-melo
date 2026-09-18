@@ -452,7 +452,18 @@
    * A imagem do sempre ligado tem muito menos espaço, por isso escurece-se por passos
    * até o desenho caber — o que também é melhor para a bateria e para o ecrã.
    */
-  async function converterSempreLigado(item) {
+  // ---------- editor do ecrã sempre ligado ----------
+  const AOD = { item: null, pac: null, iF: -1, iA: -1, base: null, orig: null, mostrador: null, cor: "#ffffff", cabe: false, tarefa: 0 };
+
+  function telaDe(imageData) {
+    const c = document.createElement("canvas");
+    c.width = imageData.width; c.height = imageData.height;
+    c.getContext("2d").putImageData(imageData, 0, 0);
+    return c;
+  }
+
+  /** Abre o editor do ecrã sempre ligado para uma máscara já guardada. */
+  async function abrirEditorAod(item) {
     carregar(true, "A ir buscar a máscara…");
     try {
       const b64 = (await fetch("/api/ficheiro/" + item.id + "?t=" + Date.now()).then((r) => r.text())).trim();
@@ -462,38 +473,196 @@
       if (iF < 0) throw new Error("não encontrei o mostrador principal nesta máscara");
       const iA = HWT.indiceAod(pac, iF);
       if (iA < 0) {
-        // sem espaço de sempre ligado: usa a base habitual, se já houver uma
         const guardada = (await baseHabitual()) || (await baseIncluida());
-        if (guardada) {
-          toast("Sem ecrã apagado próprio — a usar a " + guardada.item.nome);
-          return usarBase(item, pac, iF, guardada);
-        }
         carregar(false);
-        return escolherBase(item, pac, iF);
+        if (!guardada) return escolherBase(item, pac, iF);
+        return abrirEditorAodComBase(item, pac, iF, guardada);
       }
-      const fundo = HWT.descodificar(pac.bin, pac.imgs[iF]);
-      const orig = document.createElement("canvas");
-      orig.width = fundo.width; orig.height = fundo.height;
-      orig.getContext("2d").putImageData(fundo, 0, 0);
-      const alvo = pac.imgs[iA];
-      carregar(true, "A ajustar o ecrã apagado…");
-      const apagado = ajustar(orig, alvo.largura, alvo.altura, alvo.fim - alvo.dados, receitasAod(orig, alvo.largura, alvo.altura), desenhoAod, MINIMO_ACESO, true);
-      if (!apagado) throw new Error("o mostrador desta máscara é detalhado demais para caber no espaço do sempre ligado");
-      carregar(true, "A montar o ficheiro…");
-      const feito = await HWT.construir(pac, [{ indice: iA, canvas: apagado.canvas, transparente: true }], null, item.nome, item.capa || null);
-      const umaCor = apagado.receita.cor;
+      await montarEditorAod(item, pac, iF, iA, null);
+    } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+  }
+
+  /** A máscara não reserva espaço para o sempre ligado: vai assente noutra. */
+  async function abrirEditorAodComBase(item, pacOrigem, iF, base) {
+    carregar(true, "A encaixar o mostrador…");
+    try {
+      const orig = telaDe(HWT.descodificar(pacOrigem.bin, pacOrigem.imgs[iF]));
+      const imF = base.pac.imgs[base.iF];
+      const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
+      if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base; escolha outra base");
+      await montarEditorAod(item, pacOrigem, iF, -1, base, mostrador);
+    } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
+  }
+
+  async function montarEditorAod(item, pac, iF, iA, base, mostrador) {
+    AOD.item = item; AOD.pac = pac; AOD.iF = iF; AOD.iA = iA;
+    AOD.base = base || null; AOD.mostrador = mostrador || null;
+    AOD.orig = telaDe(HWT.descodificar(pac.bin, pac.imgs[iF]));
+    $("#aodNome").textContent = item.nome;
+    $("#aodTrocarBase").classList.toggle("escondido", !base);
+    const aviso = $("#aodAviso");
+    if (base) {
+      const capa = await capaDoZip(base.pac);
+      aviso.innerHTML = (capa ? `<img src="${capa}" alt="">` : "")
+        + `<p class="pequeno"><b>Esta máscara não reserva espaço para o sempre ligado.</b></p>`
+        + `<p class="suave pequeno">Para a usar assim, o desenho dela tem de assentar noutra máscara de suporte — a <b>${base.item.nome}</b>. Os ponteiros e os números que vai ver no relógio passam a ser os dessa máscara, não os da original.</p>`;
+      aviso.classList.remove("escondido");
+    } else {
+      aviso.classList.add("escondido");
+    }
+    // ponto de partida: o que a app escolheria sozinha
+    const alvo = base ? base.pac.imgs[base.iA] : pac.imgs[iA];
+    const sugerida = ajustar(AOD.orig, alvo.largura, alvo.altura, alvo.fim - alvo.dados,
+      receitasAod(AOD.orig, alvo.largura, alvo.altura), desenhoAod, MINIMO_ACESO, true);
+    const r = (sugerida && sugerida.receita) || { fracao: 0.12, suave: 1, cor: "#ffffff" };
+    $("#aodQuanto").value = Math.round((r.fracao || 0.12) * 100);
+    $("#aodSuave").value = r.suave || 0;
+    $("#aodPolo").value = "auto";
+    definirCorAod(r.cor || "");
+    ir("aod");
+    desenharAod(true);
+  }
+
+  /** A capa que vem dentro do .hwt, para mostrar de que máscara são os ponteiros. */
+  async function capaDoZip(pac) {
+    try {
+      const f = pac.zip.file("preview/cover.jpg") || pac.zip.file("preview/cover.png");
+      if (!f) return "";
+      const b = await f.async("base64");
+      return "data:image/jpeg;base64," + b;
+    } catch (e) { return ""; }
+  }
+
+  function definirCorAod(cor) {
+    AOD.cor = cor;
+    $$("#aodCores .bt").forEach((b) => {
+      const meu = b.dataset.cor === "pers" ? (cor && cor !== "#ffffff" && cor !== "#d4af37") : b.dataset.cor === cor;
+      b.classList.toggle("ouro", !!meu);
+    });
+    $("#aodCorPers").classList.toggle("escondido", !(cor && cor !== "#ffffff" && cor !== "#d4af37"));
+  }
+
+  function receitaAodDosControlos() {
+    const r = { fracao: (+$("#aodQuanto").value) / 100 };
+    const s = +$("#aodSuave").value;
+    if (s) r.suave = s;
+    if (AOD.cor) r.cor = AOD.cor; else r.niveis = 5;
+    const polo = $("#aodPolo").value;
+    if (polo !== "auto") r.acender = polo;
+    return r;
+  }
+
+  /** Redesenha as duas pré-visualizações; a conta do espaço é feita a seguir, sem travar. */
+  function desenharAod(agora) {
+    if (!AOD.pac) return;
+    $("#aodQuantoV").textContent = $("#aodQuanto").value + "%";
+    $("#aodSuaveV").textContent = $("#aodSuave").value + " px";
+    const alvo = AOD.base ? AOD.base.pac.imgs[AOD.base.iA] : AOD.pac.imgs[AOD.iA];
+    const face = AOD.mostrador ? AOD.mostrador.canvas : AOD.orig;
+    pintarRedondo($("#aodMostrador"), face);
+    const c = desenhoAod(AOD.orig, alvo.largura, alvo.altura, receitaAodDosControlos());
+    AOD.previa = c;
+    pintarRedondo($("#aodApagado"), c);
+    $("#aodEspaco").textContent = "A ver se cabe…";
+    $("#aodEspaco").className = "pequeno suave";
+    $("#aodInstalar").disabled = true;
+    clearTimeout(AOD.tarefa);
+    AOD.tarefa = setTimeout(() => verificarEspacoAod(alvo), agora ? 0 : 260);
+  }
+
+  function verificarEspacoAod(alvo) {
+    const m = medir(AOD.previa, alvo.fim - alvo.dados, true);
+    AOD.cabe = m.cabe && m.aceso >= MINIMO_ACESO;
+    const e = $("#aodEspaco");
+    $("#aodMaximo").classList.toggle("escondido", m.cabe);
+    if (!m.cabe) {
+      e.textContent = "Não cabe no espaço que a máscara reserva (" + Math.round((alvo.fim - alvo.dados) / 1024) + " KB). Baixe o \"quanto fica aceso\", suba a suavização, ou escolha uma cor só — a cor só ocupa muito menos.";
+      e.className = "pequeno";
+      e.style.color = "var(--perigo)";
+    } else if (m.aceso < MINIMO_ACESO) {
+      e.textContent = "Ficaria praticamente tudo apagado. Suba o \"quanto fica aceso\".";
+      e.className = "pequeno";
+      e.style.color = "var(--perigo)";
+    } else {
+      e.textContent = "Cabe. " + Math.round(m.aceso * 1000) / 10 + "% do ecrã fica aceso.";
+      e.className = "pequeno";
+      e.style.color = "var(--ok)";
+    }
+    $("#aodInstalar").disabled = !AOD.cabe;
+  }
+
+  /** Desenha num canvas de pré-visualização, recortado em círculo sobre preto. */
+  function pintarRedondo(destino, fonte) {
+    const x = destino.getContext("2d"), L = destino.width;
+    x.save();
+    x.clearRect(0, 0, L, L);
+    x.beginPath(); x.arc(L / 2, L / 2, L / 2, 0, Math.PI * 2); x.clip();
+    x.fillStyle = "#000"; x.fillRect(0, 0, L, L);
+    x.drawImage(fonte, 0, 0, L, L);
+    x.restore();
+  }
+
+  async function instalarAod() {
+    if (!AOD.cabe) return;
+    carregar(true, "A montar o ficheiro…");
+    try {
+      const trocas = [];
+      const pacDestino = AOD.base ? AOD.base.pac : AOD.pac;
+      if (AOD.base) {
+        trocas.push({ indice: AOD.base.iF, canvas: AOD.mostrador.canvas });
+        trocas.push({ indice: AOD.base.iA, canvas: AOD.previa, transparente: true });
+      } else {
+        trocas.push({ indice: AOD.iA, canvas: AOD.previa, transparente: true });
+      }
+      const feito = await HWT.construir(pacDestino, trocas, null, AOD.item.nome, AOD.item.capa || null);
       carregar(true, "A enviar para o relógio…");
-      const novoB64 = HWT.paraBase64(feito.bytes);
-      const nome = item.nome + " (sempre ligado)";
-      const envio = res(N.instalar(nome + ".hwt", novoB64),
-        "Enviada. No relógio, escolha esta máscara e ligue o \"Mostrar sempre\"." + (umaCor ? " O ecrã sempre ligado ficou a uma cor só, para caber no espaço que a máscara reserva." : ""));
+      const b64 = HWT.paraBase64(feito.bytes);
+      const nome = AOD.item.nome + " (sempre ligado)";
+      const envio = res(N.instalar(nome + ".hwt", b64), "Enviada. No relógio, escolha-a e ligue o \"Mostrar sempre\".");
       if (envio && envio.ok) {
-        await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa: item.capa || "" }, novoB64);
-        $("#acoesItem").classList.add("escondido");
-        carregarGaleria();
+        await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa: AOD.item.capa || "" }, b64);
+        if (AOD.base && !AOD.base.incluida && !AOD.base.item.basePadrao) {
+          AOD.base.item.basePadrao = true;
+          try { await api("/api/mascaras", AOD.base.item); } catch (e) { /* nada */ }
+        }
+        ir("biblioteca", true);
       }
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
+
+  /** Procura o maior "quanto fica aceso" que ainda cabe, com a cor e a suavização atuais. */
+  function porNoMaximoAod() {
+    const alvo = AOD.base ? AOD.base.pac.imgs[AOD.base.iA] : AOD.pac.imgs[AOD.iA];
+    const orcamento = alvo.fim - alvo.dados, campo = $("#aodQuanto"), antes = campo.value;
+    let baixo = +campo.min, alto = +campo.max, melhor = 0;
+    while (baixo <= alto) {
+      const meio = Math.floor((baixo + alto) / 2);
+      campo.value = meio;
+      const c = desenhoAod(AOD.orig, alvo.largura, alvo.altura, receitaAodDosControlos());
+      const m = medir(c, orcamento, true);
+      if (m.cabe && m.aceso >= MINIMO_ACESO) { melhor = meio; baixo = meio + 1; } else alto = meio - 1;
+    }
+    if (!melhor) {
+      campo.value = antes;
+      toast("Nem no mínimo cabe. Suba a suavização ou escolha uma cor só.");
+      return;
+    }
+    campo.value = melhor;
+    desenharAod(true);
+  }
+
+  $("#aodMaximo").onclick = porNoMaximoAod;
+  $("#btVoltarAod").onclick = () => ir("biblioteca", true);
+  $("#aodQuanto").oninput = () => desenharAod();
+  $("#aodSuave").oninput = () => desenharAod();
+  $("#aodPolo").onchange = () => desenharAod();
+  $("#aodCorPers").oninput = (e) => { definirCorAod(e.target.value); desenharAod(); };
+  $$("#aodCores .bt").forEach((b) => (b.onclick = () => {
+    definirCorAod(b.dataset.cor === "pers" ? $("#aodCorPers").value : b.dataset.cor);
+    desenharAod();
+  }));
+  $("#aodInstalar").onclick = instalarAod;
+  $("#aodTrocarBase").onclick = () => { ir("biblioteca", true); escolherBase(AOD.item, AOD.pac, AOD.iF); };
 
   const pacotesEmCache = new Map();
   async function pacoteDe(id, nome) {
