@@ -477,13 +477,13 @@
       const iA = alvo && alvo.onde === "wf" ? alvo.indice : -1;
       // a face muitas vezes está repartida por várias imagens do tamanho do ecrã
       const orig = HWT.faceComposta(pac, iA) || telaDe(HWT.descodificar(pac.bin, pac.imgs[iF]));
-      if (iA < 0) {
+      if (!alvo) {
         const guardada = (await baseHabitual()) || (await baseIncluida());
         carregar(false);
         if (!guardada) return escolherBase(item, orig);
         return abrirEditorAodComBase(item, orig, guardada);
       }
-      await montarEditorAod(item, orig, pac, iA, null);
+      await montarEditorAod(item, orig, pac, alvo, null);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
