@@ -1106,7 +1106,18 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
   $$("#abasEditor button").forEach((b) => (b.onclick = () => {
     $$("#abasEditor button").forEach((x) => x.classList.toggle("ativo", x === b));
     $$(".aba").forEach((a) => a.classList.toggle("ativo", a.dataset.aba === b.dataset.aba));
+    if (b.dataset.aba === "enviar") baseParaEnviar();
   }));
+
+  /** Põe já uma base carregada no separador Enviar, para não ser preciso escolher ficheiro. */
+  async function baseParaEnviar() {
+    if (pacoteHwt) return;
+    const base = (await baseHabitual()) || (await baseIncluida());
+    if (!base) { $("#hwtInfo").textContent = "Ainda não há nenhuma máscara base guardada. Escolha um ficheiro .hwt."; return; }
+    pacoteHwt = base.pac; alvoHwt = base.iF; alvoAod = base.iA;
+    $("#hwtInfo").innerHTML = `Base: <b>${base.item.nome}</b> — já carregada. Os ponteiros e números serão os dela. Escolha outro ficheiro se quiser mudar.`;
+    $("#btEnviarRelogio").disabled = $("#btGuardarHwt").disabled = false;
+  }
 
   function listarCamadas() {
     const el = $("#listaCamadas"); el.innerHTML = "";
