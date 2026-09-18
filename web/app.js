@@ -472,7 +472,9 @@
       const pac = await HWT.abrir(ficheiroDe(b64, item.nome + ".hwt"));
       const iF = HWT.indiceFundo(pac);
       if (iF < 0) throw new Error("não encontrei o mostrador principal nesta máscara");
-      const iA = HWT.indiceAod(pac, iF);
+      // o ecrã sempre ligado vive no aod.bin quando a máscara o traz
+      const alvo = HWT.alvoAod(pac);
+      const iA = alvo && alvo.onde === "wf" ? alvo.indice : -1;
       // a face muitas vezes está repartida por várias imagens do tamanho do ecrã
       const orig = HWT.faceComposta(pac, iA) || telaDe(HWT.descodificar(pac.bin, pac.imgs[iF]));
       if (iA < 0) {
