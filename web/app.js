@@ -1281,8 +1281,8 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
     const capa = renderDe(mPrincipal, false, 466).toDataURL("image/jpeg", 0.9);
     const trocas = [{ indice: alvoHwt, canvas: renderDe(mPrincipal, soEst) }];
     if (mPrincipal.aodLigado) {
-      if (alvoAod < 0) throw new Error("esta base não tem imagem de ecrã sempre ligado; escolha outra ou desligue essa opção");
-      trocas.push({ indice: alvoAod, canvas: renderDe(mPrincipal.aod || mPrincipal, soEst) });
+      if (!alvoAod) throw new Error("esta base não tem imagem de ecrã sempre ligado; escolha outra ou desligue essa opção");
+      trocas.push({ onde: alvoAod.onde, indice: alvoAod.indice, canvas: renderDe(mPrincipal.aod || mPrincipal, soEst) });
     }
     return HWT.construir(pacoteHwt, trocas, null, mPrincipal.nome, capa);
   }
