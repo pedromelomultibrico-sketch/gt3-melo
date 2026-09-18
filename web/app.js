@@ -836,9 +836,9 @@
       const b = new Blob([bytes]); b.name = "base-aod.hwt";
       const pac = await HWT.abrir(b);
       const f = HWT.indiceFundo(pac);
-      const a = f >= 0 ? HWT.indiceAod(pac, f) : -1;
-      if (f < 0 || a < 0) return null;
-      baseIncluidaCache = { item: { nome: "base incluída na app" }, pac, iF: f, iA: a, incluida: true };
+      const alvo = f >= 0 ? HWT.alvoAod(pac) : null;
+      if (f < 0 || !alvo) return null;
+      baseIncluidaCache = { item: { nome: "base incluída na app" }, pac, iF: f, alvo, incluida: true };
       return baseIncluidaCache;
     } catch (e) { return null; }
   }
