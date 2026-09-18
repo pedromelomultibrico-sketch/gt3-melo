@@ -473,32 +473,43 @@
       const iF = HWT.indiceFundo(pac);
       if (iF < 0) throw new Error("não encontrei o mostrador principal nesta máscara");
       const iA = HWT.indiceAod(pac, iF);
+      // a face muitas vezes está repartida por várias imagens do tamanho do ecrã
+      const orig = HWT.faceComposta(pac, iA) || telaDe(HWT.descodificar(pac.bin, pac.imgs[iF]));
       if (iA < 0) {
         const guardada = (await baseHabitual()) || (await baseIncluida());
         carregar(false);
-        if (!guardada) return escolherBase(item, pac, iF);
-        return abrirEditorAodComBase(item, pac, iF, guardada);
+        if (!guardada) return escolherBase(item, orig);
+        return abrirEditorAodComBase(item, orig, guardada);
       }
-      await montarEditorAod(item, pac, iF, iA, null);
+      await montarEditorAod(item, orig, pac, iA, null);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
-  /** A máscara não reserva espaço para o sempre ligado: vai assente noutra. */
-  async function abrirEditorAodComBase(item, pacOrigem, iF, base) {
+  /** Máscara desenhada por mim: não é um ficheiro, por isso assenta sempre numa base. */
+  async function abrirEditorAodDesenho(item) {
+    carregar(true, "A preparar o desenho…");
+    try {
+      const base = (await baseHabitual()) || (await baseIncluida());
+      if (!base) throw new Error("não há nenhuma máscara com ecrã sempre ligado para servir de suporte");
+      await abrirEditorAodComBase(item, renderDe(Estudio.normalizar(item), true, 466), base);
+    } catch (e) { toast("⚠ " + e.message); carregar(false); }
+  }
+
+  /** O desenho não tem espaço próprio para o sempre ligado: vai assente noutra máscara. */
+  async function abrirEditorAodComBase(item, orig, base) {
     carregar(true, "A encaixar o mostrador…");
     try {
-      const orig = telaDe(HWT.descodificar(pacOrigem.bin, pacOrigem.imgs[iF]));
       const imF = base.pac.imgs[base.iF];
       const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
       if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base; escolha outra base");
-      await montarEditorAod(item, pacOrigem, iF, -1, base, mostrador);
+      await montarEditorAod(item, orig, base.pac, base.iA, base, mostrador);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
-  async function montarEditorAod(item, pac, iF, iA, base, mostrador) {
-    AOD.item = item; AOD.pac = pac; AOD.iF = iF; AOD.iA = iA;
+  async function montarEditorAod(item, orig, pac, iA, base, mostrador) {
+    AOD.item = item; AOD.pac = pac; AOD.iA = iA;
     AOD.base = base || null; AOD.mostrador = mostrador || null;
-    AOD.orig = telaDe(HWT.descodificar(pac.bin, pac.imgs[iF]));
+    AOD.orig = orig;
     $("#aodNome").textContent = item.nome;
     $("#aodTrocarBase").classList.toggle("escondido", !base);
     const aviso = $("#aodAviso");
