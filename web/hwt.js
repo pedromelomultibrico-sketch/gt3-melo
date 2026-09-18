@@ -197,6 +197,43 @@
     return op / (d.length / 4);
   }
 
+  /** Quanto desenho visível tem esta imagem (0 = chapa preta ou vazia). */
+  function riqueza(imageData) {
+    const d = imageData.data;
+    let acesos = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 40 && d[i] + d[i + 1] + d[i + 2] > 60) acesos++;
+    return acesos / (d.length / 4);
+  }
+
+  /**
+   * A face como ela se vê: muitas máscaras não têm o desenho todo numa imagem só —
+   * têm uma chapa (muitas vezes preta) e por cima outras imagens do tamanho do ecrã.
+   * Junta todas as imagens grandes, menos a do ecrã sempre ligado, numa só.
+   * Os ponteiros ficam de fora: são imagens mais pequenas e moveriam-se.
+   */
+  function faceComposta(pacote, excluir) {
+    const grandes = pacote.imgs
+      .map((im, i) => ({ im, i }))
+      .filter(({ im, i }) => i !== excluir && Math.min(im.largura, im.altura) >= 400);
+    if (!grandes.length) return null;
+    const L = Math.max(...grandes.map(({ im }) => Math.max(im.largura, im.altura)));
+    const c = document.createElement("canvas");
+    c.width = c.height = L;
+    const x = c.getContext("2d");
+    x.fillStyle = "#000"; x.fillRect(0, 0, L, L);
+    let houve = false;
+    for (const { im } of grandes) {
+      const d = descodificar(pacote.bin, im);
+      if (riqueza(d) < 0.001) continue; // chapa vazia: não vale a pena
+      const t = document.createElement("canvas");
+      t.width = im.largura; t.height = im.altura;
+      t.getContext("2d").putImageData(d, 0, 0);
+      x.drawImage(t, (L - im.largura) / 2, (L - im.altura) / 2);
+      houve = true;
+    }
+    return houve ? c : null;
+  }
+
   /**
    * Escolhe a imagem a substituir: o fundo principal do mostrador.
    * As máscaras redondas têm ~78% de píxeis opacos (o círculo dentro do quadrado);
