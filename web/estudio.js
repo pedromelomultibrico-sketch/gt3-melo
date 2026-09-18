@@ -59,7 +59,7 @@
     { nome: "Executivo", fundo: { tipo: "gradiente", cor1: "#3b2f1e", cor2: "#0d0a06", angulo: 180 }, camadas: [
       { tipo: "marcas", tamanho: 220, espessura: 8, cor: "#e8d5a8" }, { tipo: "data", x: 330, y: C, tamanho: 22, cor: "#e8d5a8" },
       { tipo: "texto", y: 150, tamanho: 20, texto: "MULTIBRICO", cor: "#e8d5a8", fonte: "Playfair Display" }, { tipo: "minutos_ponteiros", tamanho: 190, espessura: 9, cor: "#e8d5a8" }] },
-  ].map((m) => ({ ...m, fundo: { imagem: "", escurecer: 0, cor2: "#000000", angulo: 0, ...m.fundo }, camadas: m.camadas.map((c) => ({ ...camadaPadrao(c.tipo), ...c })) }));
+  ].map((m) => ({ ...m, fundo: { imagem: "", brilho: 0, zoom: 100, cor2: "#000000", angulo: 0, ...m.fundo }, camadas: m.camadas.map((c) => ({ ...camadaPadrao(c.tipo), ...c })) }));
 
   function normalizar(m) {
     const n = nova(m && m.nome);
