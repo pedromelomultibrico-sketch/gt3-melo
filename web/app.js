@@ -523,7 +523,7 @@
       aviso.classList.add("escondido");
     }
     // ponto de partida: o que a app escolheria sozinha
-    const alvo = base ? base.pac.imgs[base.iA] : pac.imgs[iA];
+    const alvo = pac.imgs[iA];
     const sugerida = ajustar(AOD.orig, alvo.largura, alvo.altura, alvo.fim - alvo.dados,
       receitasAod(AOD.orig, alvo.largura, alvo.altura), desenhoAod, MINIMO_ACESO, true);
     const r = (sugerida && sugerida.receita) || { fracao: 0.12, suave: 1, cor: "#ffffff" };
