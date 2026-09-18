@@ -851,9 +851,9 @@
       if (!m) return null;
       const pac = await pacoteDe(m.id, m.nome);
       const f = HWT.indiceFundo(pac);
-      const a = f >= 0 ? HWT.indiceAod(pac, f) : -1;
-      if (f < 0 || a < 0) return null;
-      return { item: m, pac, iF: f, iA: a };
+      const alvo = f >= 0 ? HWT.alvoAod(pac) : null;
+      if (f < 0 || !alvo) return null;
+      return { item: m, pac, iF: f, alvo };
     } catch (e) { return null; }
   }
 
