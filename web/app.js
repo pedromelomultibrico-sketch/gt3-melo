@@ -26,7 +26,7 @@
     const atual = $$(".ecra.ativo")[0];
     if (!semPilha && atual && atual.id !== "ecra-" + ecra) pilha.push(atual.id.replace("ecra-", ""));
     $$(".ecra").forEach((e) => e.classList.toggle("ativo", e.id === "ecra-" + ecra));
-    $$("#navegacao button").forEach((b) => b.classList.toggle("ativo", b.dataset.ecra === ecra || (ecra === "editor" && b.dataset.ecra === "mascaras")));
+    $$("#navegacao button").forEach((b) => b.classList.toggle("ativo", b.dataset.ecra === ecra || (ecra === "editor" && b.dataset.ecra === "mascaras") || (ecra === "aod" && b.dataset.ecra === "biblioteca")));
     if (ecra !== "biblioteca") { const a = $("#acoesItem"); if (a) a.classList.add("escondido"); }
     window.scrollTo(0, 0);
     if (ecra === "biblioteca") carregarGaleria();
