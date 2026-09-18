@@ -476,7 +476,14 @@
       const alvo = HWT.alvoAod(pac);
       const iA = alvo && alvo.onde === "wf" ? alvo.indice : -1;
       // a face muitas vezes está repartida por várias imagens do tamanho do ecrã
-      const orig = HWT.faceComposta(pac, iA) || telaDe(HWT.descodificar(pac.bin, pac.imgs[iF]));
+      let orig = HWT.faceComposta(pac, iA) || telaDe(HWT.descodificar(pac.bin, pac.imgs[iF]));
+      // se mesmo assim sair preta, resta a pré-visualização que vem no ficheiro
+      let daCapa = false;
+      if (riquezaTela(orig) < 0.01) {
+        const capa = await faceDaCapa(pac);
+        if (capa) { orig = capa; daCapa = true; }
+      }
+      AOD.daCapa = daCapa;
       if (!alvo) {
         const guardada = (await baseHabitual()) || (await baseIncluida());
         carregar(false);
