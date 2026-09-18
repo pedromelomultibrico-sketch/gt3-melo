@@ -624,12 +624,24 @@
     const d = x.getImageData(0, 0, largura, altura);
     const p = d.data;
     const corFixa = receita.cor ? [parseInt(receita.cor.slice(1, 3), 16), parseInt(receita.cor.slice(3, 5), 16), parseInt(receita.cor.slice(5, 7), 16)] : null;
-    const escuro = receita.escuro || 0;
+    const escuro = receita.escuro || 0, ganho = receita.ganho || 1;
+    // limiar relativo ao próprio mostrador: um desenho escuro não fica todo apagado
+    const an = receita.fracao ? analisar(p, largura, altura, receita.fracao) : { claro: false, limiar: receita.limiar || 0 };
+    const niveis = receita.niveis || 0, passo = niveis ? 255 / (niveis - 1) : 0;
+    const escala = an.claro ? 255 / Math.max(1, an.limiar) : 0;
     for (let i = 0; i < p.length; i += 4) {
-      const luz = 0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2];
-      if (receita.limiar && luz < receita.limiar) { p[i] = p[i + 1] = p[i + 2] = 0; p[i + 3] = 0; continue; }
-      if (corFixa) { p[i] = corFixa[0]; p[i + 1] = corFixa[1]; p[i + 2] = corFixa[2]; continue; }
-      if (escuro) { p[i] *= 1 - escuro; p[i + 1] *= 1 - escuro; p[i + 2] *= 1 - escuro; }
+      const luz = p[i + 3] === 0 ? 0 : 0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2];
+      const fica = an.claro ? luz <= an.limiar && p[i + 3] > 0 : luz >= an.limiar && an.limiar > 0;
+      if (!fica) { p[i] = p[i + 1] = p[i + 2] = 0; p[i + 3] = 0; continue; }
+      if (corFixa) { p[i] = corFixa[0]; p[i + 1] = corFixa[1]; p[i + 2] = corFixa[2]; p[i + 3] = 255; continue; }
+      // mostrador claro: o desenho escuro passa a aceso (quanto mais escuro, mais aceso)
+      const base = an.claro ? [(an.limiar - luz) * escala, (an.limiar - luz) * escala, (an.limiar - luz) * escala] : [p[i], p[i + 1], p[i + 2]];
+      for (let k = 0; k < 3; k++) {
+        let v = base[k] * ganho * (1 - escuro);
+        if (niveis) v = Math.round(v / passo) * passo;
+        p[i + k] = v > 255 ? 255 : v;
+      }
+      p[i + 3] = 255;
     }
     x.putImageData(d, 0, 0);
     return c;
