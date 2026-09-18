@@ -1125,4 +1125,6 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
   verFicheiroPendente();
   setInterval(() => { if ($("#ecra-inicio").classList.contains("ativo")) mostrarDispositivo(N.dispositivos()); }, 15000);
   document.fonts && document.fonts.ready.then(() => redesenhar());
+  // usado pelos testes para verificar a conversão do ecrã sempre ligado
+  window.__aod = { RECEITAS_AOD, RECEITAS_FUNDO, desenhoAod, desenhoFundo, medir, ajustar, analisar, receitasAod, MINIMO_ACESO };
 })();
