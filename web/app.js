@@ -570,16 +570,48 @@
    * Experimenta as receitas por ordem e devolve o primeiro desenho que cabe
    * e que ainda deixa ver alguma coisa (senão ficaria um mostrador preto).
    */
-  function ajustar(origem, largura, altura, orcamento, receitas, fazer, minimoAceso) {
+  function ajustar(origem, largura, altura, orcamento, receitas, fazer, minimoAceso, transparente) {
     let quaseBoa = null;
     for (let k = 0; k < receitas.length; k++) {
       const c = fazer(origem, largura, altura, receitas[k]);
-      const m = medir(c, orcamento);
+      const m = medir(c, orcamento, transparente);
       if (!m.cabe) continue;
-      if (m.aceso >= (minimoAceso || 0)) return { canvas: c, receita: receitas[k], passo: k, aceso: m.aceso };
-      if (!quaseBoa || m.aceso > quaseBoa.aceso) quaseBoa = { canvas: c, receita: receitas[k], passo: k, aceso: m.aceso };
+      const bom = m.aceso >= (minimoAceso || 0) && (!minimoAceso || m.aceso <= MAXIMO_ACESO);
+      if (bom) return { canvas: c, receita: receitas[k], passo: k, aceso: m.aceso };
+      const nota = m.aceso > MAXIMO_ACESO ? 0 : m.aceso;
+      if (!quaseBoa || nota > quaseBoa.aceso) quaseBoa = { canvas: c, receita: receitas[k], passo: k, aceso: nota };
     }
     return quaseBoa;
+  }
+
+  /**
+   * Decide o que fica aceso no ecrã sempre ligado: num mostrador escuro acendem-se
+   * as partes claras; num mostrador de fundo claro (mostradores brancos) acendem-se
+   * as partes escuras — os números e os traços — depois invertidas, senão ficaria
+   * o ecrã quase todo branco. Mede só dentro do círculo, para os cantos não contarem.
+   */
+  function analisar(p, largura, altura, fracao) {
+    const hist = new Uint32Array(256);
+    const cx = largura / 2, cy = altura / 2, r2 = Math.pow(Math.min(largura, altura) / 2, 2);
+    let dentro = 0;
+    for (let y = 0; y < altura; y++) {
+      const dy = y + 0.5 - cy;
+      for (let xx = 0; xx < largura; xx++) {
+        const dx = xx + 0.5 - cx;
+        if (dx * dx + dy * dy > r2) continue;
+        const i = (y * largura + xx) * 4;
+        const luz = p[i + 3] === 0 ? 0 : (0.299 * p[i] + 0.587 * p[i + 1] + 0.114 * p[i + 2]) | 0;
+        hist[luz > 255 ? 255 : luz]++; dentro++;
+      }
+    }
+    let meio = 0, acc = 0;
+    for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= dentro / 2) { meio = v; break; } }
+    const claro = meio > 128;
+    const querem = Math.max(1, Math.round(dentro * fracao));
+    let soma = 0, limiar = claro ? 255 : 0;
+    if (claro) { for (let v = 0; v < 256; v++) { soma += hist[v]; if (soma >= querem) { limiar = v; break; } } }
+    else { for (let v = 255; v >= 0; v--) { soma += hist[v]; if (soma >= querem) { limiar = v; break; } } }
+    return { claro, limiar, meio };
   }
 
   function desenhoAod(origem, largura, altura, receita) {
