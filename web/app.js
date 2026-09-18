@@ -559,8 +559,8 @@
 
   /** Cabe no espaço desta imagem? (mede sem montar o ficheiro, que é lento) */
   /** Cabe no espaço? E quanto do desenho fica aceso? */
-  function medir(canvas, orcamento) {
-    const d = HWT.prepararDesenho(canvas, canvas.width, canvas.height);
+  function medir(canvas, orcamento, transparente) {
+    const d = HWT.prepararDesenho(canvas, canvas.width, canvas.height, transparente);
     let acesos = 0;
     for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 0 && d[i] + d[i + 1] + d[i + 2] > 24) acesos++;
     return { cabe: !!HWT.codificarExato(d, orcamento), aceso: acesos / (d.length / 4) };
