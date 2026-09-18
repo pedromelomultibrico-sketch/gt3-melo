@@ -221,11 +221,14 @@
    * Os ponteiros ficam de fora: são imagens mais pequenas e moveriam-se.
    */
   function faceComposta(pacote, excluir) {
+    const maior = Math.max(...pacote.imgs.map((im) => Math.max(im.largura, im.altura)));
     const grandes = pacote.imgs
       .map((im, i) => ({ im, i }))
-      .filter(({ im, i }) => i !== excluir && Math.min(im.largura, im.altura) >= 400);
+      // chapas e desenhos do tamanho do ecrã; os ponteiros são translúcidos e ficam de fora
+      .filter(({ im, i }) => i !== excluir && Math.min(im.largura, im.altura) >= maior * 0.75
+        && (im.opacidade === undefined || im.opacidade >= 0.25));
     if (!grandes.length) return null;
-    const L = Math.max(...grandes.map(({ im }) => Math.max(im.largura, im.altura)));
+    const L = maior;
     const c = document.createElement("canvas");
     c.width = c.height = L;
     const x = c.getContext("2d");
