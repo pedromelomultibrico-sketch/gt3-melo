@@ -284,17 +284,38 @@
     return melhor;
   }
 
+  /**
+   * Onde escrever o ecrã sempre ligado. Se a máscara trouxer aod.bin, é lá —
+   * escrever no watchface.bin não tem efeito nenhum no pulso.
+   */
+  function alvoAod(pacote) {
+    if (pacote.imgsAod && pacote.imgsAod.length) {
+      let melhor = -1, area = 0;
+      pacote.imgsAod.forEach((im, i) => {
+        const a = im.largura * im.altura;
+        if (Math.min(im.largura, im.altura) >= 200 && a > area) { area = a; melhor = i; }
+      });
+      if (melhor >= 0) return { onde: "aod", indice: melhor, im: pacote.imgsAod[melhor] };
+    }
+    const f = indiceFundo(pacote);
+    const i = f >= 0 ? indiceAod(pacote, f) : -1;
+    return i >= 0 ? { onde: "wf", indice: i, im: pacote.imgs[i] } : null;
+  }
+
   /** Troca uma ou mais imagens pelos desenhos dados e devolve o .hwt novo (Uint8Array). */
   async function construir(pacote, indice, canvasFonte, nome, capa) {
     const trocas = Array.isArray(indice) ? indice : [{ indice, canvas: canvasFonte }];
     const bin = new Uint8Array(pacote.bin);
+    const binAod = pacote.binAod ? new Uint8Array(pacote.binAod) : null;
     let bitsMin = 8;
     for (const t of trocas) {
-      const r = trocarImagem(pacote, t.indice, t.canvas, t.transparente);
-      bin.set(r.bytes, pacote.imgs[t.indice].dados);
+      const noAod = t.onde === "aod" && binAod;
+      const lista = noAod ? pacote.imgsAod : pacote.imgs;
+      const r = trocarImagemEm(noAod ? binAod : bin, lista[t.indice], t.canvas, t.transparente);
+      (noAod ? binAod : bin).set(r.bytes, lista[t.indice].dados);
       bitsMin = Math.min(bitsMin, r.bits);
     }
-    return empacotar(pacote, bin, nome, capa, bitsMin);
+    return empacotar(pacote, bin, nome, capa, bitsMin, binAod);
   }
 
   /**
