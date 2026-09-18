@@ -759,7 +759,7 @@
    * as partes escuras — os números e os traços — depois invertidas, senão ficaria
    * o ecrã quase todo branco. Mede só dentro do círculo, para os cantos não contarem.
    */
-  function analisar(p, largura, altura, fracao) {
+  function analisar(p, largura, altura, fracao, acender) {
     const hist = new Uint32Array(256);
     const cx = largura / 2, cy = altura / 2, r2 = Math.pow(Math.min(largura, altura) / 2, 2);
     let dentro = 0;
