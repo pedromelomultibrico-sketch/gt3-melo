@@ -860,7 +860,7 @@
    * outra que tenha, e usa-a como suporte: o desenho desta entra no mostrador e,
    * escurecido, no sempre ligado dessa.
    */
-  async function escolherBase(item, pacOrigem, iF) {
+  async function escolherBase(item, orig) {
     const el = $("#acoesItem");
     el.innerHTML = `<b>${item.nome}</b><p class="suave pequeno">Esta máscara não traz ecrã sempre ligado. Posso pôr o desenho dela numa máscara que tenha — os ponteiros e números passam a ser os dessa. A procurar máscaras que sirvam…</p>`;
     el.classList.remove("escondido");
