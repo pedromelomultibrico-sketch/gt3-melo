@@ -66,7 +66,7 @@
     if (!m) return n;
     const out = { ...m, nome: m.nome || n.nome, fundo: { ...n.fundo, ...(m.fundo || {}) } };
     // máscaras antigas só tinham "escurecer": passa a brilho negativo
-    if (out.fundo.brilho === undefined) out.fundo.brilho = -(out.fundo.escurecer || 0);
+    if (!(m.fundo && m.fundo.brilho !== undefined)) out.fundo.brilho = -(out.fundo.escurecer || 0);
     out.fundo.zoom = Math.min(400, Math.max(100, Number(out.fundo.zoom) || 100));
     out.fundo.brilho = Math.min(100, Math.max(-90, Number(out.fundo.brilho) || 0));
     out.camadas = (m.camadas || []).filter((c) => NOMES[c.tipo]).map((c) => ({ ...camadaPadrao(c.tipo), ...c, id: c.id || Math.random().toString(36).slice(2, 9) }));
