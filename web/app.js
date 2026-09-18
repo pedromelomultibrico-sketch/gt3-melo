@@ -528,6 +528,10 @@
       aviso.innerHTML = (capa ? `<img src="${capa}" alt="">` : "")
         + `<p class="pequeno"><b>Esta máscara não reserva espaço para o sempre ligado.</b></p>`
         + `<p class="suave pequeno">Para a usar assim, o desenho dela tem de assentar noutra máscara de suporte — a <b>${base.item.nome}</b>. Os ponteiros e os números que vai ver no relógio passam a ser os dessa máscara, não os da original.</p>`;
+      if (AOD.daCapa) aviso.innerHTML += NOTA_CAPA;
+      aviso.classList.remove("escondido");
+    } else if (AOD.daCapa) {
+      aviso.innerHTML = NOTA_CAPA;
       aviso.classList.remove("escondido");
     } else {
       aviso.classList.add("escondido");
