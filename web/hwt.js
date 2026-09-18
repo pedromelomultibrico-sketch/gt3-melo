@@ -352,7 +352,7 @@
   }
 
   /** Volta a montar o ficheiro .hwt com o binário já alterado. */
-  async function empacotar(pacote, bin, nome, capa, bits) {
+  async function empacotar(pacote, bin, nome, capa, bits, binAod) {
     const saida = new JSZip();
     for (const nomeF of Object.keys(pacote.zip.files)) {
       const f = pacote.zip.files[nomeF];
