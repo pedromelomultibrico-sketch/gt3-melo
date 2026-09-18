@@ -619,14 +619,9 @@
     carregar(true, "A montar o ficheiro…");
     try {
       const trocas = [];
-      const pacDestino = AOD.base ? AOD.base.pac : AOD.pac;
-      if (AOD.base) {
-        trocas.push({ indice: AOD.base.iF, canvas: AOD.mostrador.canvas });
-        trocas.push({ indice: AOD.base.iA, canvas: AOD.previa, transparente: true });
-      } else {
-        trocas.push({ indice: AOD.iA, canvas: AOD.previa, transparente: true });
-      }
-      const feito = await HWT.construir(pacDestino, trocas, null, AOD.item.nome, AOD.item.capa || null);
+      if (AOD.base) trocas.push({ indice: AOD.base.iF, canvas: AOD.mostrador.canvas });
+      trocas.push({ indice: AOD.iA, canvas: AOD.previa, transparente: true });
+      const feito = await HWT.construir(AOD.pac, trocas, null, AOD.item.nome, AOD.item.capa || null);
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
       const nome = AOD.item.nome + " (sempre ligado)";
