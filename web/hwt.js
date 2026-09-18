@@ -185,9 +185,18 @@
       if (f) bin = await f.async("uint8array"); else zipInterno = null;
     } catch (e) { zipInterno = null; }
     const imgs = lerImagens(bin);
+    // O ecrã sempre ligado não está no watchface.bin: quando existe, vem num
+    // ficheiro próprio, aod.bin, e é DAÍ que o relógio o lê.
+    let binAod = null, imgsAod = null;
+    if (zipInterno && zipInterno.file("aod.bin")) {
+      try {
+        binAod = await zipInterno.file("aod.bin").async("uint8array");
+        imgsAod = lerImagens(binAod);
+      } catch (e) { binAod = null; imgsAod = null; }
+    }
     const titulo = (desc.match(/<title>([^<]*)<\/title>/) || [])[1] || ficheiro.name;
     const screen = (desc.match(/<screen>([^<]*)<\/screen>/) || [])[1] || "";
-    return { zip, desc, honor, nomeInterno, zipInterno, bin, imgs, titulo, screen, bytes, nomeFicheiro: ficheiro.name };
+    return { zip, desc, honor, nomeInterno, zipInterno, bin, imgs, binAod, imgsAod, titulo, screen, bytes, nomeFicheiro: ficheiro.name };
   }
 
   function opacidade(imageData) {
