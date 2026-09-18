@@ -645,6 +645,10 @@
       e.textContent = "Ficaria praticamente tudo apagado. Suba o \"quanto fica aceso\".";
       e.className = "pequeno";
       e.style.color = "var(--perigo)";
+    } else if (m.aceso > MAXIMO_ACESO) {
+      e.textContent = "Cabe, mas fica " + Math.round(m.aceso * 1000) / 10 + "% do ecrã aceso — é muito para um sempre ligado, gasta bateria e marca o ecrã. Baixe o \"quanto fica aceso\".";
+      e.className = "pequeno";
+      e.style.color = "var(--ouro)";
     } else {
       e.textContent = "Cabe. " + Math.round(m.aceso * 1000) / 10 + "% do ecrã fica aceso.";
       e.className = "pequeno";
