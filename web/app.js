@@ -486,7 +486,7 @@
       const novoB64 = HWT.paraBase64(feito.bytes);
       const nome = item.nome + " (sempre ligado)";
       const envio = res(N.instalar(nome + ".hwt", novoB64),
-        "Enviada. No relógio, escolha esta máscara e ligue o \"Mostrar sempre\"." + (escuroUsado > 0.5 ? " Ficou mais escura para caber." : ""));
+        "Enviada. No relógio, escolha esta máscara e ligue o \"Mostrar sempre\"." + (umaCor ? " O ecrã sempre ligado ficou a uma cor só, para caber no espaço que a máscara reserva." : ""));
       if (envio && envio.ok) {
         await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa: item.capa || "" }, novoB64);
         $("#acoesItem").classList.add("escondido");
