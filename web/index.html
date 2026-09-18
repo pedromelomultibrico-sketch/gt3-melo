@@ -128,7 +128,10 @@
       <div class="cartao">
         <label>Tipo<select id="fTipo"><option value="cor">Cor sólida</option><option value="gradiente">Gradiente</option><option value="imagem">Imagem</option></select></label>
         <div class="linha"><label>Cor 1<input type="color" id="fCor1"></label><label>Cor 2<input type="color" id="fCor2"></label><label>Ângulo<input type="range" id="fAngulo" min="0" max="360"></label></div>
-        <label>Escurecer imagem<input type="range" id="fEscurecer" min="0" max="80" value="0"></label>
+        <div id="ajustesImagem">
+          <label>Aproximar (zoom) <b id="fZoomV">100%</b><input type="range" id="fZoom" min="100" max="400" step="5" value="100"></label>
+          <label>Brilho <b id="fBrilhoV">0</b><input type="range" id="fBrilho" min="-90" max="100" step="5" value="0"></label>
+        </div>
         <div class="linha"><label class="bt ficheiro">Escolher imagem<input type="file" id="fImagem" accept="image/*"></label><button class="bt" id="btTirarImagem">Tirar imagem</button></div>
       </div>
     </div>
