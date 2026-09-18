@@ -1138,10 +1138,19 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
   // fundo
   function preencherFundo() {
     const f = m.fundo;
-    $("#fTipo").value = f.tipo; $("#fCor1").value = f.cor1 || "#000000"; $("#fCor2").value = f.cor2 || "#000000"; $("#fAngulo").value = f.angulo || 0; $("#fEscurecer").value = f.escurecer || 0;
+    $("#fTipo").value = f.tipo; $("#fCor1").value = f.cor1 || "#000000"; $("#fCor2").value = f.cor2 || "#000000"; $("#fAngulo").value = f.angulo || 0;
+    $("#fZoom").value = f.zoom || 100; $("#fBrilho").value = f.brilho || 0;
+    $("#fZoomV").textContent = (f.zoom || 100) + "%";
+    $("#fBrilhoV").textContent = (f.brilho > 0 ? "+" : "") + (f.brilho || 0);
+    // zoom e brilho só fazem sentido quando o fundo é uma imagem
+    $("#ajustesImagem").classList.toggle("escondido", f.tipo !== "imagem" || !f.imagem);
   }
-  ["fTipo", "fCor1", "fCor2", "fAngulo", "fEscurecer"].forEach((id) => ($("#" + id).oninput = () => {
-    m.fundo.tipo = $("#fTipo").value; m.fundo.cor1 = $("#fCor1").value; m.fundo.cor2 = $("#fCor2").value; m.fundo.angulo = Number($("#fAngulo").value); m.fundo.escurecer = Number($("#fEscurecer").value);
+  ["fTipo", "fCor1", "fCor2", "fAngulo", "fZoom", "fBrilho"].forEach((id) => ($("#" + id).oninput = () => {
+    m.fundo.tipo = $("#fTipo").value; m.fundo.cor1 = $("#fCor1").value; m.fundo.cor2 = $("#fCor2").value; m.fundo.angulo = Number($("#fAngulo").value);
+    m.fundo.zoom = Number($("#fZoom").value); m.fundo.brilho = Number($("#fBrilho").value);
+    $("#fZoomV").textContent = m.fundo.zoom + "%";
+    $("#fBrilhoV").textContent = (m.fundo.brilho > 0 ? "+" : "") + m.fundo.brilho;
+    $("#ajustesImagem").classList.toggle("escondido", m.fundo.tipo !== "imagem" || !m.fundo.imagem);
     redesenhar();
   }));
   $("#fImagem").onchange = async (e) => { const f = e.target.files[0]; if (!f) return; m.fundo.imagem = await redimensionar(await lerFicheiro(f, "url"), 466); m.fundo.tipo = "imagem"; preencherFundo(); redesenhar(); e.target.value = ""; };
