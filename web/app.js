@@ -1153,7 +1153,7 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
     $("#ajustesImagem").classList.toggle("escondido", m.fundo.tipo !== "imagem" || !m.fundo.imagem);
     redesenhar();
   }));
-  $("#fImagem").onchange = async (e) => { const f = e.target.files[0]; if (!f) return; m.fundo.imagem = await redimensionar(await lerFicheiro(f, "url"), 466); m.fundo.tipo = "imagem"; preencherFundo(); redesenhar(); e.target.value = ""; };
+  $("#fImagem").onchange = async (e) => { const f = e.target.files[0]; if (!f) return; m.fundo.imagem = await redimensionar(await lerFicheiro(f, "url"), 800); m.fundo.tipo = "imagem"; preencherFundo(); redesenhar(); e.target.value = ""; };
   $("#btTirarImagem").onclick = () => { m.fundo.imagem = ""; if (m.fundo.tipo === "imagem") m.fundo.tipo = "gradiente"; preencherFundo(); redesenhar(); };
 
   // IA no editor
