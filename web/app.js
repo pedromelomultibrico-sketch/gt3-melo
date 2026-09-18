@@ -639,7 +639,7 @@
 
   /** Procura o maior "quanto fica aceso" que ainda cabe, com a cor e a suavização atuais. */
   function porNoMaximoAod() {
-    const alvo = AOD.base ? AOD.base.pac.imgs[AOD.base.iA] : AOD.pac.imgs[AOD.iA];
+    const alvo = AOD.pac.imgs[AOD.iA];
     const orcamento = alvo.fim - alvo.dados, campo = $("#aodQuanto"), antes = campo.value;
     let baixo = +campo.min, alto = +campo.max, melhor = 0;
     while (baixo <= alto) {
