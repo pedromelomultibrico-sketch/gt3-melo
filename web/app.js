@@ -509,12 +509,38 @@
    * Formas de encolher um mostrador até caber no espaço do ecrã sempre ligado:
    * escurecer, depois apagar o que é escuro, e por fim deixar só o desenho numa cor.
    */
-  const RECEITAS_AOD = [
-    { escuro: 0.2 }, { suave: 2, escuro: 0.2 }, { suave: 4, escuro: 0.3 },
-    { limiar: 50 }, { suave: 2, limiar: 50 }, { limiar: 80 }, { suave: 3, limiar: 80 },
-    { limiar: 110, escuro: 0.2 }, { limiar: 140, escuro: 0.25 }, { suave: 4, limiar: 140 },
-    { limiar: 150, cor: "#d4af37" }, { limiar: 180, cor: "#d4af37" }, { limiar: 205, cor: "#ffffff" },
+  /** Abaixo disto o ecrã sempre ligado ficaria praticamente preto — não serve. */
+  const MINIMO_ACESO = 0.004;
+  /** Acima disto ficaria o ecrã quase todo aceso: não é um sempre ligado, é um mostrador. */
+  const MAXIMO_ACESO = 0.4;
+
+  /** Mostradores escuros: guarda as cores do que está aceso. */
+  const RECEITAS_COR = [
+    { fracao: 0.22, niveis: 6 }, { fracao: 0.16, niveis: 5 },
+    { suave: 1, fracao: 0.12, niveis: 5 }, { suave: 1, fracao: 0.09, niveis: 4 },
   ];
+  /** A uma cor só: ocupa muito menos espaço, por isso cabe muito mais desenho. */
+  const RECEITAS_UMA_COR = [
+    { suave: 1, fracao: 0.2, cor: "#ffffff" }, { suave: 1, fracao: 0.16, cor: "#ffffff" },
+    { suave: 1, fracao: 0.13, cor: "#ffffff" }, { suave: 1, fracao: 0.1, cor: "#d4af37" },
+    { suave: 2, fracao: 0.08, cor: "#d4af37" }, { suave: 2, fracao: 0.06, cor: "#ffffff" },
+    { suave: 2, fracao: 0.04, cor: "#ffffff" }, { suave: 3, fracao: 0.025, cor: "#ffffff" },
+    { suave: 3, fracao: 0.015, cor: "#ffffff" },
+  ];
+  const RECEITAS_AOD = RECEITAS_COR.concat(RECEITAS_UMA_COR);
+
+  /**
+   * Num mostrador de fundo claro o desenho tem de ser invertido, e aí as cores
+   * originais já não servem de nada: vale mais uma cor só, que cabe muito melhor.
+   */
+  function receitasAod(origem, largura, altura) {
+    const c = document.createElement("canvas");
+    c.width = largura; c.height = altura;
+    const x = c.getContext("2d");
+    x.drawImage(origem, 0, 0, largura, altura);
+    const p = x.getImageData(0, 0, largura, altura).data;
+    return analisar(p, largura, altura, 0.1).claro ? RECEITAS_UMA_COR : RECEITAS_AOD;
+  }
 
   /** Formas de aliviar o mostrador: desfocar e reduzir cores até caber. */
   const RECEITAS_FUNDO = [
