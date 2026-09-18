@@ -889,44 +889,6 @@
     });
   }
 
-  /** Monta a máscara nova: desenho da original no mostrador e, escurecido, no sempre ligado. */
-  async function usarBase(item, pacOrigem, iF, base) {
-    carregar(true, "A montar a máscara…");
-    try {
-      const fundo = HWT.descodificar(pacOrigem.bin, pacOrigem.imgs[iF]);
-      const orig = document.createElement("canvas");
-      orig.width = fundo.width; orig.height = fundo.height;
-      orig.getContext("2d").putImageData(fundo, 0, 0);
-      const imF = base.pac.imgs[base.iF], imA = base.pac.imgs[base.iA];
-      carregar(true, "A encaixar o mostrador…");
-      const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
-      if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base; escolha outra base");
-      carregar(true, "A encaixar o ecrã apagado…");
-      const apagado = ajustar(orig, imA.largura, imA.altura, imA.fim - imA.dados, receitasAod(orig, imA.largura, imA.altura), desenhoAod, MINIMO_ACESO, true);
-      if (!apagado) throw new Error("não consegui reduzir o desenho ao espaço do ecrã apagado desta base");
-      carregar(true, "A montar o ficheiro…");
-      const feito = await HWT.construir(base.pac, [
-        { indice: base.iF, canvas: mostrador.canvas },
-        { indice: base.iA, canvas: apagado.canvas, transparente: true },
-      ], null, item.nome, item.capa || null);
-      const umaCor = apagado.receita.cor;
-      const suavizado = mostrador.receita.suave || 0;
-      carregar(true, "A enviar para o relógio…");
-      const b64 = HWT.paraBase64(feito.bytes);
-      const nome = item.nome + " (sempre ligado)";
-      const envio = res(N.instalar(nome + ".hwt", b64),
-        "Enviada. No relógio, escolha-a e ligue o \"Mostrar sempre\"."
-        + (umaCor ? " O ecrã sempre ligado ficou a uma cor só, para caber." : "")
-        + (suavizado ? " O mostrador foi suavizado " + suavizado + "px para caber." : ""));
-      if (envio && envio.ok) {
-        await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa: item.capa || "" }, b64);
-        if (!base.incluida && !base.item.basePadrao) { base.item.basePadrao = true; try { await api("/api/mascaras", base.item); } catch (e) { /* nada */ } }
-        $("#acoesItem").classList.add("escondido");
-        carregarGaleria();
-      }
-    } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
-  }
-
   /** Reinstala um ficheiro guardado. */
   async function instalarDaBiblioteca(item) {
     carregar(true, "A ir buscar o ficheiro…");
