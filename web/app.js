@@ -476,17 +476,12 @@
       orig.width = fundo.width; orig.height = fundo.height;
       orig.getContext("2d").putImageData(fundo, 0, 0);
       const alvo = pac.imgs[iA];
-      let feito = null, usou = null;
-      for (let k = 0; k < RECEITAS_AOD.length; k++) {
-        carregar(true, "A ajustar o ecrã apagado (tentativa " + (k + 1) + ")…");
-        try {
-          feito = await HWT.construir(pac, [{ indice: iA, canvas: desenhoAod(orig, alvo.largura, alvo.altura, RECEITAS_AOD[k]) }], null, item.nome, item.capa || null);
-          usou = RECEITAS_AOD[k];
-          break;
-        } catch (e) { /* não coube: receita seguinte */ }
-      }
-      const escuroUsado = usou && (usou.cor ? 1 : usou.escuro || 0);
-      if (!feito) throw new Error("o mostrador desta máscara é detalhado demais para caber no espaço do sempre ligado");
+      carregar(true, "A ajustar o ecrã apagado…");
+      const apagado = ajustar(orig, alvo.largura, alvo.altura, alvo.fim - alvo.dados, receitasAod(orig, alvo.largura, alvo.altura), desenhoAod, MINIMO_ACESO, true);
+      if (!apagado) throw new Error("o mostrador desta máscara é detalhado demais para caber no espaço do sempre ligado");
+      carregar(true, "A montar o ficheiro…");
+      const feito = await HWT.construir(pac, [{ indice: iA, canvas: apagado.canvas, transparente: true }], null, item.nome, item.capa || null);
+      const umaCor = apagado.receita.cor;
       carregar(true, "A enviar para o relógio…");
       const novoB64 = HWT.paraBase64(feito.bytes);
       const nome = item.nome + " (sempre ligado)";
