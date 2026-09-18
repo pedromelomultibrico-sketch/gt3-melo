@@ -109,7 +109,11 @@ def codificar_exato(img, alvo):
     if alvo % 4:
         return None
     for bits in (8, 7, 6, 5, 4, 3, 2):
-        m = 0xFF if bits >= 8 else (0xFF << (8 - bits)) & 0xFF
+        # arredonda para os níveis disponíveis, em vez de cortar bits:
+        # assim um tom escuro não vai parar todo a preto (igual ao hwt.js)
+        niveis = (1 << bits) - 1
+        passo = 255.0 / niveis
+        q = (lambda v: v) if bits >= 8 else (lambda v: int(round(round(v / passo) * passo)))
         dados = img.tobytes()
         tokens = []
         ant, n = -1, 0
