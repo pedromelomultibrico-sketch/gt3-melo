@@ -549,6 +549,42 @@
     desenharAod(true);
   }
 
+  const NOTA_CAPA = `<p class="pequeno"><b>Não consegui remontar a face a partir do ficheiro.</b></p>`
+    + `<p class="suave pequeno">Estou a usar a imagem de pré-visualização que vem dentro da máscara. O desenho é o certo, mas os ponteiros ficam parados na posição em que a fábrica os desenhou — no relógio vai vê-los duas vezes, os parados e os que andam. Se não gostar, baixe o "quanto fica aceso" até só ficarem os números e os traços.</p>`;
+
+  /** Quanto desenho visível tem este canvas (0 = está preto). */
+  function riquezaTela(c) {
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    let n = 0;
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 40 && d[i] + d[i + 1] + d[i + 2] > 60) n++;
+    return n / (d.length / 4);
+  }
+
+  /**
+   * Saída de recurso: a imagem de pré-visualização que vem dentro do .hwt.
+   * Mostra sempre o mostrador como ele é, mas com os ponteiros parados na
+   * posição em que a fábrica os desenhou.
+   */
+  async function faceDaCapa(pac) {
+    const url = await capaDoZip(pac);
+    if (!url) return null;
+    try {
+      const im = await new Promise((ok, erro) => {
+        const i = new Image();
+        i.onload = () => ok(i); i.onerror = () => erro(new Error("capa ilegível"));
+        i.src = url;
+      });
+      const L = 466;
+      const c = document.createElement("canvas");
+      c.width = c.height = L;
+      const x = c.getContext("2d");
+      x.fillStyle = "#000"; x.fillRect(0, 0, L, L);
+      const e = Math.max(L / im.width, L / im.height);
+      x.drawImage(im, (L - im.width * e) / 2, (L - im.height * e) / 2, im.width * e, im.height * e);
+      return c;
+    } catch (e) { return null; }
+  }
+
   /** A capa que vem dentro do .hwt, para mostrar de que máscara são os ponteiros. */
   async function capaDoZip(pac) {
     try {
