@@ -746,7 +746,7 @@
       const nome = item.nome + " (sempre ligado)";
       const envio = res(N.instalar(nome + ".hwt", b64),
         "Enviada. No relógio, escolha-a e ligue o \"Mostrar sempre\"."
-        + (escuroUsado > 0.5 ? " O ecrã apagado ficou mais escuro para caber." : "")
+        + (umaCor ? " O ecrã sempre ligado ficou a uma cor só, para caber." : "")
         + (suavizado ? " O mostrador foi suavizado " + suavizado + "px para caber." : ""));
       if (envio && envio.ok) {
         await guardarNaBiblioteca({ nome, origem: "ficheiro", ficheiro: true, capa: item.capa || "" }, b64);
