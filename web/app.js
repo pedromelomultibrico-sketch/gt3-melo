@@ -399,8 +399,8 @@
     el.scrollIntoView({ block: "nearest" });
     $("#acFechar").onclick = () => el.classList.add("escondido");
     if ($("#acEditar")) $("#acEditar").onclick = () => { el.classList.add("escondido"); aoEditar(); };
-    if ($("#acInstalar")) $("#acInstalar").onclick = () => instalarDaBiblioteca(item);
-    if ($("#acAod")) $("#acAod").onclick = () => abrirEditorAod(item);
+    if ($("#acInstalar")) $("#acInstalar").onclick = () => (item.ficheiro ? instalarDaBiblioteca(item) : instalarDesenho(item));
+    if ($("#acAod")) $("#acAod").onclick = () => (item.ficheiro ? abrirEditorAod(item) : abrirEditorAodDesenho(item));
     $("#acApagar").onclick = async () => {
       if (!confirm("Apagar \"" + item.nome + "\" da biblioteca? O relógio fica na mesma.")) return;
       try { await api("/api/mascaras/" + item.id, null, "DELETE"); el.classList.add("escondido"); toast("Apagada"); carregarGaleria(); }
