@@ -737,9 +737,9 @@
       carregar(true, "A montar o ficheiro…");
       const feito = await HWT.construir(base.pac, [
         { indice: base.iF, canvas: mostrador.canvas },
-        { indice: base.iA, canvas: apagado.canvas },
+        { indice: base.iA, canvas: apagado.canvas, transparente: true },
       ], null, item.nome, item.capa || null);
-      const escuroUsado = apagado.receita.cor ? 1 : (apagado.receita.escuro || 0);
+      const umaCor = apagado.receita.cor;
       const suavizado = mostrador.receita.suave || 0;
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
