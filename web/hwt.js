@@ -249,7 +249,7 @@
    * Prepara o desenho como ele vai ficar dentro do ficheiro: recortado em círculo,
    * sobre fundo preto. Serve também para medir se cabe, antes de montar tudo.
    */
-  function prepararDesenho(canvasFonte, largura, altura) {
+  function prepararDesenho(canvasFonte, largura, altura, transparente) {
     const c = document.createElement("canvas");
     c.width = largura; c.height = altura;
     const ctx = c.getContext("2d");
@@ -257,16 +257,18 @@
     ctx.beginPath();
     ctx.arc(largura / 2, altura / 2, Math.min(largura, altura) / 2, 0, Math.PI * 2);
     ctx.clip();
-    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, largura, altura);
+    // o ecrã sempre ligado guarda-se com o resto transparente (mais leve e
+    // deixa ver as camadas por baixo); o mostrador normal leva fundo preto
+    if (!transparente) { ctx.fillStyle = "#000"; ctx.fillRect(0, 0, largura, altura); }
     ctx.drawImage(canvasFonte, 0, 0, largura, altura);
     ctx.restore();
     return ctx.getImageData(0, 0, largura, altura).data;
   }
 
   /** Codifica um desenho para caber, byte a byte, no espaço da imagem indicada. */
-  function trocarImagem(pacote, indice, canvasFonte) {
+  function trocarImagem(pacote, indice, canvasFonte, transparente) {
     const im = pacote.imgs[indice];
-    const px = prepararDesenho(canvasFonte, im.largura, im.altura);
+    const px = prepararDesenho(canvasFonte, im.largura, im.altura, transparente);
     const alvo = im.fim - im.dados;
     const cod = codificarExato(px, alvo);
     if (!cod) throw new Error("o desenho tem demasiado detalhe para caber no espaço desta base (" + Math.round(alvo / 1024) + " KB). Use uma base com fundo em fotografia ou simplifique o fundo.");
