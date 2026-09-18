@@ -108,11 +108,15 @@
       ctx.fillStyle = "#000"; ctx.fillRect(0, 0, T, T);
       const im = imagem(f.imagem, redesenhar);
       if (im) {
-        const esc = Math.max(T / im.width, T / im.height);
+        // zoom: 100 = a imagem preenche o mostrador; acima disso aproxima
+        const esc = Math.max(T / im.width, T / im.height) * ((f.zoom || 100) / 100);
         const w = im.width * esc, h = im.height * esc;
+        // brilho: negativo escurece, positivo aclara ("escurecer" é o nome antigo)
+        const b = f.brilho === undefined ? -(f.escurecer || 0) : f.brilho;
+        if (b) ctx.filter = "brightness(" + Math.max(0, 1 + b / 100) + ")";
         ctx.drawImage(im, (T - w) / 2, (T - h) / 2, w, h);
+        ctx.filter = "none";
       }
-      if (f.escurecer) { ctx.fillStyle = `rgba(0,0,0,${f.escurecer / 100})`; ctx.fillRect(0, 0, T, T); }
     } else if (f.tipo === "gradiente") {
       const a = ((f.angulo || 0) * Math.PI) / 180;
       const dx = Math.cos(a) * C, dy = Math.sin(a) * C;
