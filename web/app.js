@@ -622,7 +622,7 @@
     try {
       const trocas = [];
       if (AOD.base) trocas.push({ indice: AOD.base.iF, canvas: AOD.mostrador.canvas });
-      trocas.push({ indice: AOD.iA, canvas: AOD.previa, transparente: true });
+      trocas.push({ onde: AOD.alvo.onde, indice: AOD.alvo.indice, canvas: AOD.previa, transparente: true });
       const feito = await HWT.construir(AOD.pac, trocas, null, AOD.item.nome, AOD.item.capa || null);
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
