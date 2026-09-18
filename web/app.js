@@ -569,7 +569,7 @@
     if (!AOD.pac) return;
     $("#aodQuantoV").textContent = $("#aodQuanto").value + "%";
     $("#aodSuaveV").textContent = $("#aodSuave").value + " px";
-    const alvo = AOD.base ? AOD.base.pac.imgs[AOD.base.iA] : AOD.pac.imgs[AOD.iA];
+    const alvo = AOD.pac.imgs[AOD.iA];
     const face = AOD.mostrador ? AOD.mostrador.canvas : AOD.orig;
     pintarRedondo($("#aodMostrador"), face);
     const c = desenhoAod(AOD.orig, alvo.largura, alvo.altura, receitaAodDosControlos());
