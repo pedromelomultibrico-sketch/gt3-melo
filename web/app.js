@@ -669,7 +669,7 @@
     desenharAod();
   }));
   $("#aodInstalar").onclick = instalarAod;
-  $("#aodTrocarBase").onclick = () => { ir("biblioteca", true); escolherBase(AOD.item, AOD.pac, AOD.iF); };
+  $("#aodTrocarBase").onclick = () => { ir("biblioteca", true); escolherBase(AOD.item, AOD.orig); };
 
   const pacotesEmCache = new Map();
   async function pacoteDe(id, nome) {
