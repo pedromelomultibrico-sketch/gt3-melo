@@ -732,7 +732,7 @@
       const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
       if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base; escolha outra base");
       carregar(true, "A encaixar o ecrã apagado…");
-      const apagado = ajustar(orig, imA.largura, imA.altura, imA.fim - imA.dados, RECEITAS_AOD, desenhoAod);
+      const apagado = ajustar(orig, imA.largura, imA.altura, imA.fim - imA.dados, receitasAod(orig, imA.largura, imA.altura), desenhoAod, MINIMO_ACESO, true);
       if (!apagado) throw new Error("não consegui reduzir o desenho ao espaço do ecrã apagado desta base");
       carregar(true, "A montar o ficheiro…");
       const feito = await HWT.construir(base.pac, [
