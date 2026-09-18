@@ -874,9 +874,9 @@
         const pac = await pacoteDe(c.id, c.nome);
         const f = HWT.indiceFundo(pac);
         if (f < 0) continue;
-        const a = HWT.indiceAod(pac, f);
-        if (a < 0) continue;
-        candidatas.push({ item: c, pac, iF: f, iA: a });
+        const alvo = HWT.alvoAod(pac);
+        if (!alvo) continue;
+        candidatas.push({ item: c, pac, iF: f, alvo });
       } catch (e) { /* segue */ }
     }
     if (!candidatas.length) {
