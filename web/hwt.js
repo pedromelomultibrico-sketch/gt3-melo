@@ -241,15 +241,21 @@
    * pequenos desenhos — trocá-las estraga o mostrador.
    */
   function indiceFundo(pacote) {
-    let melhor = -1, area = 0, houveGrande = false;
+    let melhor = -1, area = 0, houveGrande = false, chapa = -1, chapaArea = 0;
     pacote.imgs.forEach((im, i) => {
       if (Math.min(im.largura, im.altura) < 200) return;
       houveGrande = true;
-      const op = opacidade(descodificar(pacote.bin, im));
+      const d = descodificar(pacote.bin, im);
+      const op = opacidade(d);
       im.opacidade = op;
+      im.riqueza = riqueza(d);
       const a = im.largura * im.altura;
-      if (op > 0.6 && a > area) { area = a; melhor = i; }
+      if (op <= 0.6) return;
+      // uma chapa quase toda preta não é a face: só serve se não houver melhor
+      if (im.riqueza < 0.02) { if (a > chapaArea) { chapaArea = a; chapa = i; } return; }
+      if (a > area) { area = a; melhor = i; }
     });
+    if (melhor < 0) melhor = chapa;
     pacote.semFundo = melhor < 0 && houveGrande;
     return melhor;
   }
