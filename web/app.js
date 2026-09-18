@@ -775,7 +775,8 @@
     }
     let meio = 0, acc = 0;
     for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= dentro / 2) { meio = v; break; } }
-    const claro = meio > 128;
+    // "claro" = o mostrador tem fundo claro, por isso acende-se o desenho escuro
+    const claro = acender ? acender === "escuro" : meio > 128;
     const querem = Math.max(1, Math.round(dentro * fracao));
     let soma = 0, limiar = claro ? 255 : 0;
     if (claro) { for (let v = 0; v < 256; v++) { soma += hist[v]; if (soma >= querem) { limiar = v; break; } } }
