@@ -525,9 +525,9 @@
       aviso.classList.add("escondido");
     }
     // ponto de partida: o que a app escolheria sozinha
-    const alvo = pac.imgs[iA];
-    const sugerida = ajustar(AOD.orig, alvo.largura, alvo.altura, alvo.fim - alvo.dados,
-      receitasAod(AOD.orig, alvo.largura, alvo.altura), desenhoAod, MINIMO_ACESO, true);
+    const img = AOD.alvo.im;
+    const sugerida = ajustar(AOD.orig, img.largura, img.altura, img.fim - img.dados,
+      receitasAod(AOD.orig, img.largura, img.altura), desenhoAod, MINIMO_ACESO, true);
     const r = (sugerida && sugerida.receita) || { fracao: 0.12, suave: 1, cor: "#ffffff" };
     $("#aodQuanto").value = Math.round((r.fracao || 0.12) * 100);
     $("#aodSuave").value = r.suave || 0;
