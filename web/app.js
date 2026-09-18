@@ -796,7 +796,7 @@
     const corFixa = receita.cor ? [parseInt(receita.cor.slice(1, 3), 16), parseInt(receita.cor.slice(3, 5), 16), parseInt(receita.cor.slice(5, 7), 16)] : null;
     const escuro = receita.escuro || 0, ganho = receita.ganho || 1;
     // limiar relativo ao próprio mostrador: um desenho escuro não fica todo apagado
-    const an = receita.fracao ? analisar(p, largura, altura, receita.fracao) : { claro: false, limiar: receita.limiar || 0 };
+    const an = receita.fracao ? analisar(p, largura, altura, receita.fracao, receita.acender) : { claro: false, limiar: receita.limiar || 0 };
     const niveis = receita.niveis || 0, passo = niveis ? 255 / (niveis - 1) : 0;
     const escala = an.claro ? 255 / Math.max(1, an.limiar) : 0;
     for (let i = 0; i < p.length; i += 4) {
