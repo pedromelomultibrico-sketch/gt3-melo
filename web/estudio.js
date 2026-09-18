@@ -36,7 +36,7 @@
   }
 
   function nova(nome) {
-    return { nome: nome || "Nova máscara", fundo: { tipo: "gradiente", cor1: "#15151a", cor2: "#000000", angulo: 135, imagem: "", escurecer: 0 }, camadas: [camadaPadrao("marcas"), camadaPadrao("hora"), camadaPadrao("data"), camadaPadrao("bateria")] };
+    return { nome: nome || "Nova máscara", fundo: { tipo: "gradiente", cor1: "#15151a", cor2: "#000000", angulo: 135, imagem: "", brilho: 0, zoom: 100 }, camadas: [camadaPadrao("marcas"), camadaPadrao("hora"), camadaPadrao("data"), camadaPadrao("bateria")] };
   }
 
   const MODELOS = [
