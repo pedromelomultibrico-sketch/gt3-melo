@@ -1116,7 +1116,7 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
     if (pacoteHwt) return;
     const base = (await baseHabitual()) || (await baseIncluida());
     if (!base) { $("#hwtInfo").textContent = "Ainda não há nenhuma máscara base guardada. Escolha um ficheiro .hwt."; return; }
-    pacoteHwt = base.pac; alvoHwt = base.iF; alvoAod = base.iA;
+    pacoteHwt = base.pac; alvoHwt = base.iF; alvoAod = base.alvo;
     $("#hwtInfo").innerHTML = `Base: <b>${base.item.nome}</b> — já carregada. Os ponteiros e números serão os dela. Escolha outro ficheiro se quiser mudar.`;
     $("#btEnviarRelogio").disabled = $("#btGuardarHwt").disabled = false;
   }
