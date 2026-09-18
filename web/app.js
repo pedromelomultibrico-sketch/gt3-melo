@@ -390,7 +390,7 @@
       <p class="suave pequeno">${ORIGENS[item.origem] || "guardada"}${quando ? " · " + String(quando.getDate()).padStart(2, "0") + "/" + String(quando.getMonth() + 1).padStart(2, "0") + " " + String(quando.getHours()).padStart(2, "0") + ":" + String(quando.getMinutes()).padStart(2, "0") : ""}</p>
       <div class="linha">
         ${item.ficheiro ? '<button class="bt ouro" id="acInstalar">Instalar no relógio</button>' : '<button class="bt ouro" id="acEditar">Abrir no editor</button>'}
-        ${item.ficheiro ? '<button class="bt" id="acAod">Converter em sempre ligado</button>' : ""}
+        ${item.ficheiro ? '<button class="bt" id="acAod">Editar sempre ligado</button>' : ""}
         <button class="bt perigo" id="acApagar">Apagar</button>
         <button class="bt" id="acFechar">Fechar</button>
       </div>`;
