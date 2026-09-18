@@ -504,12 +504,12 @@
       const imF = base.pac.imgs[base.iF];
       const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
       if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base; escolha outra base");
-      await montarEditorAod(item, orig, base.pac, base.iA, base, mostrador);
+      await montarEditorAod(item, orig, base.pac, base.alvo, base, mostrador);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
-  async function montarEditorAod(item, orig, pac, iA, base, mostrador) {
-    AOD.item = item; AOD.pac = pac; AOD.iA = iA;
+  async function montarEditorAod(item, orig, pac, alvo, base, mostrador) {
+    AOD.item = item; AOD.pac = pac; AOD.alvo = alvo;
     AOD.base = base || null; AOD.mostrador = mostrador || null;
     AOD.orig = orig;
     $("#aodNome").textContent = item.nome;
