@@ -7,7 +7,10 @@
   const simulado = {
     versao: () => 0,
     versaoNome: () => "navegador",
-    dispositivos: () => JSON.stringify({ ok: true, dispositivos: [{ nome: "HUAWEI WATCH GT 3 (simulado)", estado: "INITIALIZED", estadoTexto: "Ligado", ligado: true, pronto: true, bateria: 76, firmware: "—", modelo: "GT3" }] }),
+    dispositivos: () => JSON.stringify({ ok: true, dispositivos: [
+      { nome: "HUAWEI WATCH GT 3 (simulado)", endereco: "AA:BB", estado: "INITIALIZED", estadoTexto: "Ligado", ligado: true, pronto: true, bateria: 76, firmware: "—", modelo: "GT3", audio: false, usado: true },
+      { nome: "REDMI Buds (simulado)", endereco: "CC:DD", estado: "INITIALIZED", estadoTexto: "Ligado", ligado: true, pronto: true, bateria: 50, firmware: "—", modelo: "Buds", audio: true, usado: false },
+    ] }),
     dados: () => {
       const agora = Math.floor(Date.now() / 1000), ini = agora - (agora % 86400);
       const serie = []; let p = 0;
