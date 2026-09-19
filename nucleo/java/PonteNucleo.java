@@ -462,7 +462,11 @@ public class PonteNucleo {
                     case "alarmes": i = new Intent(act, ConfigureAlarms.class); break;
                     case "graficos": i = new Intent(act, ActivityChartsActivity.class); break;
                     case "mostradores": i = new Intent(act, AppManagerActivity.class); break;
-                    case "definicoes_relogio": i = new Intent(act, DeviceSettingsActivity.class); break;
+                    case "definicoes_relogio":
+                        i = new Intent(act, DeviceSettingsActivity.class);
+                        // sem isto o ecrã rebenta: é preciso dizer-lhe de onde vem
+                        i.putExtra(DeviceSettingsActivity.MENU_ENTRY_POINT, DeviceSettingsActivity.MENU_ENTRY_POINTS.DEVICE_SETTINGS);
+                        break;
                     case "bateria": i = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS); break;
                     default: return;
                 }
