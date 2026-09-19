@@ -520,10 +520,10 @@
       if (!alvo) {
         const guardada = (await baseHabitual()) || (await baseIncluida());
         carregar(false);
-        if (!guardada) return escolherBase(item, orig);
-        return abrirEditorAodComBase(item, orig, guardada);
+        if (!guardada) return escolherBase(item, orig, converter);
+        return abrirEditorAodComBase(item, orig, guardada, converter);
       }
-      await montarEditorAod(item, orig, pac, alvo, null);
+      await montarEditorAod(item, orig, pac, alvo, null, null, converter);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
