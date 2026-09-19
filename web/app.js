@@ -704,7 +704,8 @@
       const trocas = [];
       if (AOD.base) trocas.push({ indice: AOD.base.iF, canvas: AOD.mostrador.canvas });
       trocas.push({ onde: AOD.alvo.onde, indice: AOD.alvo.indice, canvas: AOD.previa, transparente: true });
-      const feito = await HWT.construir(AOD.pac, trocas, null, AOD.item.nome, AOD.item.capa || null);
+      const feito = await HWT.construir(AOD.pac, trocas, null, AOD.item.nome, AOD.item.capa || null,
+        { ponteirosAod: $("#aodPonteiros").checked });
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
       const nome = AOD.item.nome + " (sempre ligado)";
