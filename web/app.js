@@ -432,6 +432,8 @@
     if ($("#acEditar")) $("#acEditar").onclick = () => { el.classList.add("escondido"); aoEditar(); };
     if ($("#acInstalar")) $("#acInstalar").onclick = () => (item.ficheiro ? instalarDaBiblioteca(item) : instalarDesenho(item));
     if ($("#acAod")) $("#acAod").onclick = () => (item.ficheiro ? abrirEditorAod(item) : abrirEditorAodDesenho(item));
+    // o mesmo caminho, mas sem parar no editor: a app escolhe e envia
+    if ($("#acConverter")) $("#acConverter").onclick = () => (item.ficheiro ? abrirEditorAod(item, true) : abrirEditorAodDesenho(item, true));
     $("#acApagar").onclick = async () => {
       if (!confirm("Apagar \"" + item.nome + "\" da biblioteca? O relógio fica na mesma.")) return;
       try { await api("/api/mascaras/" + item.id, null, "DELETE"); el.classList.add("escondido"); toast("Apagada"); carregarGaleria(); }
