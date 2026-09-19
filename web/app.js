@@ -661,28 +661,31 @@
     AOD.tarefa = setTimeout(medirAod, agora ? 0 : 260);
   }
 
-  function verificarEspacoAod(alvo) {
-    const m = medir(AOD.previa, alvo.fim - alvo.dados, true);
-    AOD.cabe = m.cabe && m.aceso >= MINIMO_ACESO;
+  /**
+   * O espaço deixou de ser um travão: a tabela das imagens é refeita e o
+   * desenho ocupa o que precisar. O que se mede agora é o consumo — quanto
+   * ecrã fica aceso, que é o que gasta bateria e marca o painel.
+   */
+  function medirAod() {
+    const m = medir(AOD.previa, null, true);
+    AOD.cabe = m.aceso >= MINIMO_ACESO && m.aceso <= LIMITE_ACESO;
     const e = $("#aodEspaco");
-    $("#aodMaximo").classList.toggle("escondido", m.cabe);
-    if (!m.cabe) {
-      e.textContent = "Não cabe no espaço que a máscara reserva (" + Math.round((alvo.fim - alvo.dados) / 1024) + " KB). Baixe o \"quanto fica aceso\", suba a suavização, ou escolha uma cor só — a cor só ocupa muito menos.";
-      e.className = "pequeno";
+    const demais = m.aceso > MAXIMO_ACESO;
+    $("#aodMaximo").classList.toggle("escondido", AOD.cabe && !demais);
+    if (m.aceso > LIMITE_ACESO) {
+      e.textContent = "Ficaria " + Math.round(m.aceso * 100) + "% do ecrã aceso o dia inteiro — isso marca o painel. Baixe o \"quanto fica aceso\" ou troque o que acende.";
       e.style.color = "var(--perigo)";
-    } else if (m.aceso < MINIMO_ACESO) {
+    } else if (!AOD.cabe) {
       e.textContent = "Ficaria praticamente tudo apagado. Suba o \"quanto fica aceso\".";
-      e.className = "pequeno";
       e.style.color = "var(--perigo)";
-    } else if (m.aceso > MAXIMO_ACESO) {
-      e.textContent = "Cabe, mas fica " + Math.round(m.aceso * 1000) / 10 + "% do ecrã aceso — é muito para um sempre ligado, gasta bateria e marca o ecrã. Baixe o \"quanto fica aceso\".";
-      e.className = "pequeno";
+    } else if (demais) {
+      e.textContent = "Fica " + Math.round(m.aceso * 1000) / 10 + "% do ecrã aceso — é muito para um sempre ligado: gasta bateria e marca o ecrã.";
       e.style.color = "var(--ouro)";
     } else {
-      e.textContent = "Cabe. " + Math.round(m.aceso * 1000) / 10 + "% do ecrã fica aceso.";
-      e.className = "pequeno";
+      e.textContent = Math.round(m.aceso * 1000) / 10 + "% do ecrã fica aceso.";
       e.style.color = "var(--ok)";
     }
+    e.className = "pequeno";
     $("#aodInstalar").disabled = !AOD.cabe;
   }
 
