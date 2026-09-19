@@ -420,6 +420,7 @@
       <p class="suave pequeno">${ORIGENS[item.origem] || "guardada"}${quando ? " · " + String(quando.getDate()).padStart(2, "0") + "/" + String(quando.getMonth() + 1).padStart(2, "0") + " " + String(quando.getHours()).padStart(2, "0") + ":" + String(quando.getMinutes()).padStart(2, "0") : ""}</p>
       <div class="linha">
         <button class="bt ouro" id="acInstalar">Instalar no relógio</button>
+        <button class="bt" id="acConverter">Converter em sempre ligado</button>
         <button class="bt" id="acAod">Editar sempre ligado</button>
         ${item.ficheiro ? "" : '<button class="bt" id="acEditar">Abrir no editor</button>'}
         <button class="bt perigo" id="acApagar">Apagar</button>
@@ -431,6 +432,8 @@
     if ($("#acEditar")) $("#acEditar").onclick = () => { el.classList.add("escondido"); aoEditar(); };
     if ($("#acInstalar")) $("#acInstalar").onclick = () => (item.ficheiro ? instalarDaBiblioteca(item) : instalarDesenho(item));
     if ($("#acAod")) $("#acAod").onclick = () => (item.ficheiro ? abrirEditorAod(item) : abrirEditorAodDesenho(item));
+    // o mesmo caminho, mas sem parar no editor: a app escolhe e envia
+    if ($("#acConverter")) $("#acConverter").onclick = () => (item.ficheiro ? abrirEditorAod(item, true) : abrirEditorAodDesenho(item, true));
     $("#acApagar").onclick = async () => {
       if (!confirm("Apagar \"" + item.nome + "\" da biblioteca? O relógio fica na mesma.")) return;
       try { await api("/api/mascaras/" + item.id, null, "DELETE"); el.classList.add("escondido"); toast("Apagada"); carregarGaleria(); }
@@ -494,7 +497,7 @@
   }
 
   /** Abre o editor do ecrã sempre ligado para uma máscara já guardada. */
-  async function abrirEditorAod(item) {
+  async function abrirEditorAod(item, converter) {
     carregar(true, "A ir buscar a máscara…");
     try {
       const b64 = (await fetch("/api/ficheiro/" + item.id + "?t=" + Date.now()).then((r) => r.text())).trim();
@@ -517,39 +520,40 @@
       if (!alvo) {
         const guardada = (await baseHabitual()) || (await baseIncluida());
         carregar(false);
-        if (!guardada) return escolherBase(item, orig);
-        return abrirEditorAodComBase(item, orig, guardada);
+        if (!guardada) return escolherBase(item, orig, converter);
+        return abrirEditorAodComBase(item, orig, guardada, converter);
       }
-      await montarEditorAod(item, orig, pac, alvo, null);
+      await montarEditorAod(item, orig, pac, alvo, null, null, converter);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
   /** Máscara desenhada por mim: não é um ficheiro, por isso assenta sempre numa base. */
-  async function abrirEditorAodDesenho(item) {
+  async function abrirEditorAodDesenho(item, converter) {
     carregar(true, "A preparar o desenho…");
     try {
       const base = (await baseHabitual()) || (await baseIncluida());
       if (!base) throw new Error("não há nenhuma máscara com ecrã sempre ligado para servir de suporte");
       AOD.daCapa = false;
-      await abrirEditorAodComBase(item, renderDe(Estudio.normalizar(item), true, 466), base);
+      await abrirEditorAodComBase(item, renderDe(Estudio.normalizar(item), true, 466), base, converter);
     } catch (e) { toast("⚠ " + e.message); carregar(false); }
   }
 
   /** O desenho não tem espaço próprio para o sempre ligado: vai assente noutra máscara. */
-  async function abrirEditorAodComBase(item, orig, base) {
+  async function abrirEditorAodComBase(item, orig, base, converter) {
     carregar(true, "A encaixar o mostrador…");
     try {
       const imF = base.pac.imgs[base.iF];
       const mostrador = ajustar(orig, imF.largura, imF.altura, null, RECEITAS_FUNDO, desenhoFundo);
       if (!mostrador) throw new Error("não consegui encaixar o desenho nesta base; escolha outra");
-      await montarEditorAod(item, orig, base.pac, base.alvo, base, mostrador);
+      await montarEditorAod(item, orig, base.pac, base.alvo, base, mostrador, converter);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
-  async function montarEditorAod(item, orig, pac, alvo, base, mostrador) {
+  async function montarEditorAod(item, orig, pac, alvo, base, mostrador, converter) {
     AOD.item = item; AOD.pac = pac; AOD.alvo = alvo;
     AOD.base = base || null; AOD.mostrador = mostrador || null;
     AOD.orig = orig;
+    if (converter) return converterEInstalar();
     $("#aodNome").textContent = item.nome;
     $("#aodTrocarBase").classList.toggle("escondido", !base);
     const aviso = $("#aodAviso");
@@ -576,6 +580,22 @@
     definirCorAod(r.cor || "");
     ir("aod");
     desenharAod(true);
+  }
+
+  /**
+   * Um toque só: a app escolhe o ponto do sempre ligado, monta e envia.
+   * Quem quiser mexer nos valores tem o editor ao lado.
+   */
+  async function converterEInstalar() {
+    const img = AOD.alvo.im;
+    carregar(true, "A tirar o sempre ligado do mostrador…");
+    const s = melhorAod(AOD.orig, img.largura, img.altura);
+    if (!s) throw new Error("não consegui tirar um sempre ligado deste mostrador — use \"Editar sempre ligado\"");
+    const aceso = medir(s.canvas, null, true).aceso;
+    if (aceso > LIMITE_ACESO) throw new Error("este mostrador acenderia " + Math.round(aceso * 100) + "% do ecrã o dia inteiro — use \"Editar sempre ligado\" para o baixar");
+    AOD.previa = s.canvas;
+    AOD.cabe = true;
+    await instalarAod();
   }
 
   const NOTA_CAPA = `<p class="pequeno"><b>Não consegui remontar a face a partir do ficheiro.</b></p>`
@@ -979,7 +999,7 @@
    * outra que tenha, e usa-a como suporte: o desenho desta entra no mostrador e,
    * escurecido, no sempre ligado dessa.
    */
-  async function escolherBase(item, orig) {
+  async function escolherBase(item, orig, converter) {
     const el = $("#acoesItem");
     el.innerHTML = `<b>${item.nome}</b><p class="suave pequeno">Esta máscara não traz ecrã sempre ligado. Posso pôr o desenho dela numa máscara que tenha — os ponteiros e números passam a ser os dessa. A procurar máscaras que sirvam…</p>`;
     el.classList.remove("escondido");
@@ -1009,8 +1029,8 @@
     const lista = $("#listaBases");
     candidatas.forEach((c) => {
       const b = document.createElement("button");
-      b.innerHTML = `${c.item.nome}<small>${c.pac.imgs[c.iF].largura}×${c.pac.imgs[c.iF].altura} · sempre ligado ${c.alvo.im.largura}×${c.alvo.im.altura}${c.alvo.onde === "aod" ? " (próprio)" : ""}</small>`;
-      b.onclick = () => { el.classList.add("escondido"); abrirEditorAodComBase(item, orig, c); };
+      b.innerHTML = `${c.item.nome}<small>${c.pac.imgs[c.iF].largura}×${c.pac.imgs[c.iF].altura} · sempre ligado ${c.alvo.im.largura}×${c.alvo.im.altura}${c.alvo.onde === "wf" ? " (próprio)" : " (a criar)"}</small>`;
+      b.onclick = () => { el.classList.add("escondido"); abrirEditorAodComBase(item, orig, c, converter); };
       lista.append(b);
     });
   }
