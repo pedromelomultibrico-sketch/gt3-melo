@@ -37,6 +37,7 @@
 
   window.N = {
     real,
+    podeEscolher: !real || typeof N.escolherRelogio === "function",
     versao: () => N.versao(),
     versaoNome: () => N.versaoNome(),
     dispositivos: () => J(N.dispositivos()),
