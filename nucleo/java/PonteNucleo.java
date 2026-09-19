@@ -250,6 +250,7 @@ public class PonteNucleo {
     public String dispositivos() {
         try {
             JSONArray arr = new JSONArray();
+            final GBDevice escolhido = relogio();
             for (GBDevice d : GBApplication.app().getDeviceManager().getDevices()) {
                 JSONObject o = new JSONObject();
                 o.put("nome", d.getAliasOrName());
