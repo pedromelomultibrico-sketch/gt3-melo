@@ -862,8 +862,9 @@
    * Experimenta as receitas por ordem e devolve o primeiro desenho que cabe
    * e que ainda deixa ver alguma coisa (senão ficaria um mostrador preto).
    */
-  function ajustar(origem, largura, altura, orcamento, receitas, fazer, minimoAceso, transparente) {
-    let quaseBoa = null;
+  function ajustar(origem, largura, altura, orcamento, receitas, fazer, minimoAceso, transparente, maximoAceso) {
+    const teto = maximoAceso || MAXIMO_ACESO;
+    let claroDemais = null, escuroDemais = null;
     for (let k = 0; k < receitas.length; k++) {
       const c = fazer(origem, largura, altura, receitas[k]);
       const m = medir(c, orcamento, transparente);
