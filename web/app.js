@@ -658,7 +658,7 @@
     $("#aodEspaco").className = "pequeno suave";
     $("#aodInstalar").disabled = true;
     clearTimeout(AOD.tarefa);
-    AOD.tarefa = setTimeout(() => verificarEspacoAod(alvo), agora ? 0 : 260);
+    AOD.tarefa = setTimeout(medirAod, agora ? 0 : 260);
   }
 
   function verificarEspacoAod(alvo) {
