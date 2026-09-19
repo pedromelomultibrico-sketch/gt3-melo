@@ -732,8 +732,8 @@
       const meio = Math.floor((baixo + alto) / 2);
       campo.value = meio;
       const c = desenhoAod(AOD.orig, alvo.largura, alvo.altura, receitaAodDosControlos());
-      const m = medir(c, orcamento, true);
-      if (m.cabe && m.aceso >= MINIMO_ACESO) { melhor = meio; baixo = meio + 1; } else alto = meio - 1;
+      const m = medir(c, null, true);
+      if (m.aceso <= MAXIMO_ACESO) { if (m.aceso >= MINIMO_ACESO) melhor = meio; baixo = meio + 1; } else alto = meio - 1;
     }
     if (!melhor) {
       campo.value = antes;
