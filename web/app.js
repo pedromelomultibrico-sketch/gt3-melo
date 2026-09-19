@@ -803,6 +803,27 @@
    * Num mostrador de fundo claro o desenho tem de ser invertido, e aí as cores
    * originais já não servem de nada: vale mais uma cor só, que cabe muito melhor.
    */
+  /**
+   * O ponto de partida do sempre ligado. A escolha automática de polaridade
+   * engana-se às vezes — num mostrador fotografado chega a acender o ecrã
+   * inteiro — por isso experimentam-se também as duas polaridades à mão e
+   * fica a que der um ecrã bem aceso sem ser um farol.
+   */
+  function melhorAod(origem, largura, altura) {
+    const receitas = receitasAod(origem, largura, altura);
+    const tenta = (acender) => ajustar(origem, largura, altura, null,
+      acender ? receitas.map((r) => Object.assign({}, r, { acender })) : receitas,
+      desenhoAod, MINIMO_ACESO, true, ALVO_ACESO);
+    const dentro = (x) => x && x.aceso >= MINIMO_ACESO && x.aceso <= ALVO_ACESO;
+    let melhor = null;
+    for (const polo of [null, "claro", "escuro"]) {
+      const r = tenta(polo);
+      if (dentro(r)) return r;
+      if (r && (!melhor || (r.aceso >= MINIMO_ACESO && r.aceso < melhor.aceso))) melhor = r;
+    }
+    return melhor;
+  }
+
   function receitasAod(origem, largura, altura) {
     const c = document.createElement("canvas");
     c.width = largura; c.height = altura;
