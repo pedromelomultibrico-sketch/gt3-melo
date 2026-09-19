@@ -1,2 +1,3 @@
 Marca para arrancar a compilacao do APK.
 19/09/2026 - escolha de aparelho: a app deixa de falar com os auscultadores.
+19/09/2026 - definicoes do relogio: faltava o MENU_ENTRY_POINT e o ecra rebentava.
