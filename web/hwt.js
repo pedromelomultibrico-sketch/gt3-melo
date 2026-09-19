@@ -370,7 +370,6 @@
         const f = pacote.zipInterno.files[nomeF];
         if (f.dir) { zi.folder(nomeF); continue; }
         if (nomeF === "watchface.bin") zi.file(nomeF, bin);
-        else if (nomeF === "aod.bin" && binAod) zi.file(nomeF, binAod);
         else zi.file(nomeF, await f.async("uint8array"));
       }
       interno = await zi.generateAsync({ type: "uint8array", compression: "DEFLATE" });
