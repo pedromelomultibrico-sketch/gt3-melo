@@ -76,7 +76,10 @@ jobs:
           cat relatorio.txt
           if [ -f base.hwt ]; then
             python3 ci/mascara.py base.hwt teste.hwt "GT3 Melo teste" >> relatorio.txt 2>&1 || true
+            python3 ci/sempre_ligado.py base.hwt >> relatorio.txt 2>&1 || true
           fi
+          echo "--- base que vem com a app ---" >> relatorio.txt
+          python3 ci/sempre_ligado.py nucleo/base-aod.hwt --exigir >> relatorio.txt 2>&1 || echo "AVISO: a base incluida ficou sem sempre ligado" >> relatorio.txt
           cat relatorio.txt
       - name: Enviar resultado
         if: always()
