@@ -737,7 +737,7 @@
     }
     if (!melhor) {
       campo.value = antes;
-      toast("Nem no mínimo cabe. Suba a suavização ou escolha uma cor só.");
+      toast("Não encontrei um ponto bom. Mexa na suavização ou escolha uma cor só.");
       return;
     }
     campo.value = melhor;
