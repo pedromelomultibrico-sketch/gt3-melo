@@ -994,8 +994,8 @@
       const orig = renderDe(m, true, 466);
       const imF = base.pac.imgs[base.iF];
       carregar(true, "A encaixar o mostrador…");
-      const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
-      if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base");
+      const mostrador = ajustar(orig, imF.largura, imF.altura, null, RECEITAS_FUNDO, desenhoFundo);
+      if (!mostrador) throw new Error("não consegui encaixar o desenho nesta base");
       carregar(true, "A montar o ficheiro…");
       const capa = renderDe(m, false, 466).toDataURL("image/jpeg", 0.9);
       const feito = await HWT.construir(base.pac, [{ indice: base.iF, canvas: mostrador.canvas }], null, item.nome, capa);
