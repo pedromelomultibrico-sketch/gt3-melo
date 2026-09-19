@@ -545,7 +545,7 @@
       const imF = base.pac.imgs[base.iF];
       const mostrador = ajustar(orig, imF.largura, imF.altura, null, RECEITAS_FUNDO, desenhoFundo);
       if (!mostrador) throw new Error("não consegui encaixar o desenho nesta base; escolha outra");
-      await montarEditorAod(item, orig, base.pac, base.alvo, base, mostrador);
+      await montarEditorAod(item, orig, base.pac, base.alvo, base, mostrador, converter);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
