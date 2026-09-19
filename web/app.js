@@ -528,7 +528,7 @@
   }
 
   /** Máscara desenhada por mim: não é um ficheiro, por isso assenta sempre numa base. */
-  async function abrirEditorAodDesenho(item) {
+  async function abrirEditorAodDesenho(item, converter) {
     carregar(true, "A preparar o desenho…");
     try {
       const base = (await baseHabitual()) || (await baseIncluida());
