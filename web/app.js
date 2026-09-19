@@ -572,7 +572,7 @@
     const r = (sugerida && sugerida.receita) || { fracao: 0.12, suave: 1, cor: "#ffffff" };
     $("#aodQuanto").value = Math.round((r.fracao || 0.12) * 100);
     $("#aodSuave").value = r.suave || 0;
-    $("#aodPolo").value = "auto";
+    $("#aodPolo").value = r.acender || "auto";
     definirCorAod(r.cor || "");
     ir("aod");
     desenharAod(true);
