@@ -773,8 +773,16 @@
    */
   /** Abaixo disto o ecrã sempre ligado ficaria praticamente preto — não serve. */
   const MINIMO_ACESO = 0.004;
-  /** Acima disto ficaria o ecrã quase todo aceso: não é um sempre ligado, é um mostrador. */
-  const MAXIMO_ACESO = 0.4;
+  /**
+   * Acima disto já não é um sempre ligado, é um mostrador aceso: gasta bateria
+   * e marca o painel. Enquanto o tamanho em bytes travava o desenho, este
+   * limite quase nunca chegava a contar; agora é ele que manda.
+   */
+  const MAXIMO_ACESO = 0.2;
+  /** Onde a app aponta sozinha, antes de o Sr. Pedro mexer nos comandos. */
+  const ALVO_ACESO = 0.1;
+  /** Daqui para cima não se deixa instalar: seria meio ecrã aceso o dia todo. */
+  const LIMITE_ACESO = 0.5;
 
   /** Mostradores escuros: guarda as cores do que está aceso. */
   const RECEITAS_COR = [
