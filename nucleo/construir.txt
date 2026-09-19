@@ -1,0 +1,2 @@
+Marca para arrancar a compilacao do APK.
+19/09/2026 - escolha de aparelho: a app deixa de falar com os auscultadores.
