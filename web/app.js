@@ -534,7 +534,7 @@
       const base = (await baseHabitual()) || (await baseIncluida());
       if (!base) throw new Error("não há nenhuma máscara com ecrã sempre ligado para servir de suporte");
       AOD.daCapa = false;
-      await abrirEditorAodComBase(item, renderDe(Estudio.normalizar(item), true, 466), base);
+      await abrirEditorAodComBase(item, renderDe(Estudio.normalizar(item), true, 466), base, converter);
     } catch (e) { toast("⚠ " + e.message); carregar(false); }
   }
 
