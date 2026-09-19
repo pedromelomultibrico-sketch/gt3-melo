@@ -262,6 +262,8 @@ public class PonteNucleo {
                 o.put("ligado", d.isConnected());
                 o.put("pronto", d.isInitialized());
                 o.put("bateria", d.getBatteryLevel(0));
+                o.put("audio", eAudio(d));
+                o.put("usado", escolhido != null && escolhido.getAddress().equals(d.getAddress()));
                 arr.put(o);
             }
             return new JSONObject().put("ok", true).put("dispositivos", arr).toString();
