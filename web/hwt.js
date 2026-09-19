@@ -29,7 +29,7 @@
           if (ini < corpo || ini + sz > b.length) throw new Error("FAT fora do ficheiro");
           const w = u16(b, ini + 4), h = u16(b, ini + 6);
           if (w < 1 || h < 1 || w > 1024 || h > 1024) throw new Error("dimensões estranhas");
-          lista.push({ inicio: ini, dados: ini + 8, fim: ini + sz, largura: w, altura: h });
+          lista.push({ inicio: ini, dados: ini + 8, fim: ini + sz, largura: w, altura: h, pos: i });
         }
         if (lista.length) return lista;
       }
