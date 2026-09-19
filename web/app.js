@@ -539,7 +539,7 @@
   }
 
   /** O desenho não tem espaço próprio para o sempre ligado: vai assente noutra máscara. */
-  async function abrirEditorAodComBase(item, orig, base) {
+  async function abrirEditorAodComBase(item, orig, base, converter) {
     carregar(true, "A encaixar o mostrador…");
     try {
       const imF = base.pac.imgs[base.iF];
