@@ -60,11 +60,51 @@ public class PonteNucleo {
         this.web = web;
     }
 
+    private static final String PREFS = "melo";
+    private static final String PREF_RELOGIO = "relogio_escolhido";
+
+    /** Auscultadores, colunas e afins: não são relógios e não recebem máscaras. */
+    private boolean eAudio(GBDevice d) {
+        try {
+            String t = d.getType().name().toUpperCase();
+            return t.contains("BUD") || t.contains("HEADPHON") || t.contains("HEADSET")
+                    || t.contains("EARPHONE") || t.contains("AIRPOD") || t.contains("SPEAKER")
+                    || t.contains("SONY_WH") || t.contains("SONY_WF") || t.contains("SOUND");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * O relógio com que a app trabalha. Respeita a escolha do Pedro; se não houver,
+     * prefere um aparelho que não seja de áudio — senão a app acaba a falar com os
+     * auscultadores, que aceitam tudo e não fazem nada.
+     */
     private GBDevice relogio() {
         List<GBDevice> l = GBApplication.app().getDeviceManager().getDevices();
+        if (l.isEmpty()) return null;
+        String escolhido = act.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(PREF_RELOGIO, "");
+        if (!escolhido.isEmpty()) {
+            for (GBDevice d : l) if (escolhido.equals(d.getAddress())) return d;
+        }
+        for (GBDevice d : l) if (d.isInitialized() && !eAudio(d)) return d;
+        for (GBDevice d : l) if (d.isConnected() && !eAudio(d)) return d;
+        for (GBDevice d : l) if (!eAudio(d)) return d;
         for (GBDevice d : l) if (d.isInitialized()) return d;
         for (GBDevice d : l) if (d.isConnected()) return d;
-        return l.isEmpty() ? null : l.get(0);
+        return l.get(0);
+    }
+
+    /** Fixa com que aparelho a app trabalha. Endereço vazio volta à escolha automática. */
+    @JavascriptInterface
+    public String escolherRelogio(String endereco) {
+        try {
+            act.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                    .putString(PREF_RELOGIO, endereco == null ? "" : endereco).apply();
+            return new JSONObject().put("ok", true).toString();
+        } catch (Exception e) {
+            return erro(e);
+        }
     }
 
     private void naUi(Runnable r) {
