@@ -724,10 +724,9 @@
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
-  /** Procura o maior "quanto fica aceso" que ainda cabe, com a cor e a suavização atuais. */
+  /** Procura o maior "quanto fica aceso" que ainda é sensato para um sempre ligado. */
   function porNoMaximoAod() {
-    const alvo = AOD.alvo.im;
-    const orcamento = alvo.fim - alvo.dados, campo = $("#aodQuanto"), antes = campo.value;
+    const alvo = AOD.alvo.im, campo = $("#aodQuanto"), antes = campo.value;
     let baixo = +campo.min, alto = +campo.max, melhor = 0;
     while (baixo <= alto) {
       const meio = Math.floor((baixo + alto) / 2);
