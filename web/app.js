@@ -654,7 +654,7 @@
     const c = desenhoAod(AOD.orig, alvo.largura, alvo.altura, receitaAodDosControlos());
     AOD.previa = c;
     pintarRedondo($("#aodApagado"), c);
-    $("#aodEspaco").textContent = "A ver se cabe…";
+    $("#aodEspaco").textContent = "A medir…";
     $("#aodEspaco").className = "pequeno suave";
     $("#aodInstalar").disabled = true;
     clearTimeout(AOD.tarefa);
