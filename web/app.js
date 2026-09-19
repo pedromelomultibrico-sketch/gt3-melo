@@ -582,6 +582,22 @@
     desenharAod(true);
   }
 
+  /**
+   * Um toque só: a app escolhe o ponto do sempre ligado, monta e envia.
+   * Quem quiser mexer nos valores tem o editor ao lado.
+   */
+  async function converterEInstalar() {
+    const img = AOD.alvo.im;
+    carregar(true, "A tirar o sempre ligado do mostrador…");
+    const s = melhorAod(AOD.orig, img.largura, img.altura);
+    if (!s) throw new Error("não consegui tirar um sempre ligado deste mostrador — use \"Editar sempre ligado\"");
+    const aceso = medir(s.canvas, null, true).aceso;
+    if (aceso > LIMITE_ACESO) throw new Error("este mostrador acenderia " + Math.round(aceso * 100) + "% do ecrã o dia inteiro — use \"Editar sempre ligado\" para o baixar");
+    AOD.previa = s.canvas;
+    AOD.cabe = true;
+    await instalarAod();
+  }
+
   const NOTA_CAPA = `<p class="pequeno"><b>Não consegui remontar a face a partir do ficheiro.</b></p>`
     + `<p class="suave pequeno">Estou a usar a imagem de pré-visualização que vem dentro da máscara. O desenho é o certo, mas os ponteiros ficam parados na posição em que a fábrica os desenhou — no relógio vai vê-los duas vezes, os parados e os que andam. Se não gostar, baixe o "quanto fica aceso" até só ficarem os números e os traços.</p>`;
 
