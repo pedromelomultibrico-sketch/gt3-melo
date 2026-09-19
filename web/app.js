@@ -39,7 +39,10 @@
   // ---------- estado do relógio ----------
   const estado = { bateria: -1, passos: -1, fc: -1 };
   function mostrarDispositivo(info) {
-    const d = info && info.dispositivos && info.dispositivos[0];
+    const lista = (info && info.dispositivos) || [];
+    // o que a app está mesmo a usar, não simplesmente o primeiro da lista
+    const d = lista.find((x) => x.usado) || lista[0];
+    mostrarEscolhaAparelhos(lista);
     if (!d) {
       $("#nomeRelogio").textContent = "Nenhum relógio emparelhado";
       $("#estadoRelogio").textContent = "Vá a Relógio › Emparelhar";
