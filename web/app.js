@@ -540,8 +540,8 @@
     carregar(true, "A encaixar o mostrador…");
     try {
       const imF = base.pac.imgs[base.iF];
-      const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
-      if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base; escolha outra base");
+      const mostrador = ajustar(orig, imF.largura, imF.altura, null, RECEITAS_FUNDO, desenhoFundo);
+      if (!mostrador) throw new Error("não consegui encaixar o desenho nesta base; escolha outra");
       await montarEditorAod(item, orig, base.pac, base.alvo, base, mostrador);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
@@ -568,12 +568,11 @@
     }
     // ponto de partida: o que a app escolheria sozinha
     const img = AOD.alvo.im;
-    const sugerida = ajustar(AOD.orig, img.largura, img.altura, img.fim - img.dados,
-      receitasAod(AOD.orig, img.largura, img.altura), desenhoAod, MINIMO_ACESO, true);
+    const sugerida = melhorAod(AOD.orig, img.largura, img.altura);
     const r = (sugerida && sugerida.receita) || { fracao: 0.12, suave: 1, cor: "#ffffff" };
     $("#aodQuanto").value = Math.round((r.fracao || 0.12) * 100);
     $("#aodSuave").value = r.suave || 0;
-    $("#aodPolo").value = "auto";
+    $("#aodPolo").value = r.acender || "auto";
     definirCorAod(r.cor || "");
     ir("aod");
     desenharAod(true);
@@ -655,35 +654,38 @@
     const c = desenhoAod(AOD.orig, alvo.largura, alvo.altura, receitaAodDosControlos());
     AOD.previa = c;
     pintarRedondo($("#aodApagado"), c);
-    $("#aodEspaco").textContent = "A ver se cabe…";
+    $("#aodEspaco").textContent = "A medir…";
     $("#aodEspaco").className = "pequeno suave";
     $("#aodInstalar").disabled = true;
     clearTimeout(AOD.tarefa);
-    AOD.tarefa = setTimeout(() => verificarEspacoAod(alvo), agora ? 0 : 260);
+    AOD.tarefa = setTimeout(medirAod, agora ? 0 : 260);
   }
 
-  function verificarEspacoAod(alvo) {
-    const m = medir(AOD.previa, alvo.fim - alvo.dados, true);
-    AOD.cabe = m.cabe && m.aceso >= MINIMO_ACESO;
+  /**
+   * O espaço deixou de ser um travão: a tabela das imagens é refeita e o
+   * desenho ocupa o que precisar. O que se mede agora é o consumo — quanto
+   * ecrã fica aceso, que é o que gasta bateria e marca o painel.
+   */
+  function medirAod() {
+    const m = medir(AOD.previa, null, true);
+    AOD.cabe = m.aceso >= MINIMO_ACESO && m.aceso <= LIMITE_ACESO;
     const e = $("#aodEspaco");
-    $("#aodMaximo").classList.toggle("escondido", m.cabe);
-    if (!m.cabe) {
-      e.textContent = "Não cabe no espaço que a máscara reserva (" + Math.round((alvo.fim - alvo.dados) / 1024) + " KB). Baixe o \"quanto fica aceso\", suba a suavização, ou escolha uma cor só — a cor só ocupa muito menos.";
-      e.className = "pequeno";
+    const demais = m.aceso > MAXIMO_ACESO;
+    $("#aodMaximo").classList.toggle("escondido", AOD.cabe && !demais);
+    if (m.aceso > LIMITE_ACESO) {
+      e.textContent = "Ficaria " + Math.round(m.aceso * 100) + "% do ecrã aceso o dia inteiro — isso marca o painel. Baixe o \"quanto fica aceso\" ou troque o que acende.";
       e.style.color = "var(--perigo)";
-    } else if (m.aceso < MINIMO_ACESO) {
+    } else if (!AOD.cabe) {
       e.textContent = "Ficaria praticamente tudo apagado. Suba o \"quanto fica aceso\".";
-      e.className = "pequeno";
       e.style.color = "var(--perigo)";
-    } else if (m.aceso > MAXIMO_ACESO) {
-      e.textContent = "Cabe, mas fica " + Math.round(m.aceso * 1000) / 10 + "% do ecrã aceso — é muito para um sempre ligado, gasta bateria e marca o ecrã. Baixe o \"quanto fica aceso\".";
-      e.className = "pequeno";
+    } else if (demais) {
+      e.textContent = "Fica " + Math.round(m.aceso * 1000) / 10 + "% do ecrã aceso — é muito para um sempre ligado: gasta bateria e marca o ecrã.";
       e.style.color = "var(--ouro)";
     } else {
-      e.textContent = "Cabe. " + Math.round(m.aceso * 1000) / 10 + "% do ecrã fica aceso.";
-      e.className = "pequeno";
+      e.textContent = Math.round(m.aceso * 1000) / 10 + "% do ecrã fica aceso.";
       e.style.color = "var(--ok)";
     }
+    e.className = "pequeno";
     $("#aodInstalar").disabled = !AOD.cabe;
   }
 
@@ -705,7 +707,8 @@
       const trocas = [];
       if (AOD.base) trocas.push({ indice: AOD.base.iF, canvas: AOD.mostrador.canvas });
       trocas.push({ onde: AOD.alvo.onde, indice: AOD.alvo.indice, canvas: AOD.previa, transparente: true });
-      const feito = await HWT.construir(AOD.pac, trocas, null, AOD.item.nome, AOD.item.capa || null);
+      const feito = await HWT.construir(AOD.pac, trocas, null, AOD.item.nome, AOD.item.capa || null,
+        { ponteirosAod: $("#aodPonteiros").checked });
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
       const nome = AOD.item.nome + " (sempre ligado)";
@@ -721,21 +724,20 @@
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
-  /** Procura o maior "quanto fica aceso" que ainda cabe, com a cor e a suavização atuais. */
+  /** Procura o maior "quanto fica aceso" que ainda é sensato para um sempre ligado. */
   function porNoMaximoAod() {
-    const alvo = AOD.alvo.im;
-    const orcamento = alvo.fim - alvo.dados, campo = $("#aodQuanto"), antes = campo.value;
+    const alvo = AOD.alvo.im, campo = $("#aodQuanto"), antes = campo.value;
     let baixo = +campo.min, alto = +campo.max, melhor = 0;
     while (baixo <= alto) {
       const meio = Math.floor((baixo + alto) / 2);
       campo.value = meio;
       const c = desenhoAod(AOD.orig, alvo.largura, alvo.altura, receitaAodDosControlos());
-      const m = medir(c, orcamento, true);
-      if (m.cabe && m.aceso >= MINIMO_ACESO) { melhor = meio; baixo = meio + 1; } else alto = meio - 1;
+      const m = medir(c, null, true);
+      if (m.aceso <= MAXIMO_ACESO) { if (m.aceso >= MINIMO_ACESO) melhor = meio; baixo = meio + 1; } else alto = meio - 1;
     }
     if (!melhor) {
       campo.value = antes;
-      toast("Nem no mínimo cabe. Suba a suavização ou escolha uma cor só.");
+      toast("Não encontrei um ponto bom. Mexa na suavização ou escolha uma cor só.");
       return;
     }
     campo.value = melhor;
@@ -771,8 +773,16 @@
    */
   /** Abaixo disto o ecrã sempre ligado ficaria praticamente preto — não serve. */
   const MINIMO_ACESO = 0.004;
-  /** Acima disto ficaria o ecrã quase todo aceso: não é um sempre ligado, é um mostrador. */
-  const MAXIMO_ACESO = 0.4;
+  /**
+   * Acima disto já não é um sempre ligado, é um mostrador aceso: gasta bateria
+   * e marca o painel. Enquanto o tamanho em bytes travava o desenho, este
+   * limite quase nunca chegava a contar; agora é ele que manda.
+   */
+  const MAXIMO_ACESO = 0.2;
+  /** Onde a app aponta sozinha, antes de o Sr. Pedro mexer nos comandos. */
+  const ALVO_ACESO = 0.1;
+  /** Daqui para cima não se deixa instalar: seria meio ecrã aceso o dia todo. */
+  const LIMITE_ACESO = 0.5;
 
   /** Mostradores escuros: guarda as cores do que está aceso. */
   const RECEITAS_COR = [
@@ -793,6 +803,27 @@
    * Num mostrador de fundo claro o desenho tem de ser invertido, e aí as cores
    * originais já não servem de nada: vale mais uma cor só, que cabe muito melhor.
    */
+  /**
+   * O ponto de partida do sempre ligado. A escolha automática de polaridade
+   * engana-se às vezes — num mostrador fotografado chega a acender o ecrã
+   * inteiro — por isso experimentam-se também as duas polaridades à mão e
+   * fica a que der um ecrã bem aceso sem ser um farol.
+   */
+  function melhorAod(origem, largura, altura) {
+    const receitas = receitasAod(origem, largura, altura);
+    const tenta = (acender) => ajustar(origem, largura, altura, null,
+      acender ? receitas.map((r) => Object.assign({}, r, { acender })) : receitas,
+      desenhoAod, MINIMO_ACESO, true, ALVO_ACESO);
+    const dentro = (x) => x && x.aceso >= MINIMO_ACESO && x.aceso <= ALVO_ACESO;
+    let melhor = null;
+    for (const polo of [null, "claro", "escuro"]) {
+      const r = tenta(polo);
+      if (dentro(r)) return r;
+      if (r && (!melhor || (r.aceso >= MINIMO_ACESO && r.aceso < melhor.aceso))) melhor = r;
+    }
+    return melhor;
+  }
+
   function receitasAod(origem, largura, altura) {
     const c = document.createElement("canvas");
     c.width = largura; c.height = altura;
@@ -823,25 +854,29 @@
     const d = HWT.prepararDesenho(canvas, canvas.width, canvas.height, transparente);
     let acesos = 0;
     for (let i = 0; i < d.length; i += 4) if (d[i + 3] > 0 && d[i] + d[i + 1] + d[i + 2] > 24) acesos++;
-    return { cabe: !!HWT.codificarExato(d, orcamento), aceso: acesos / (d.length / 4) };
+    // sem orçamento a tabela das imagens é refeita: cabe sempre
+    return { cabe: !orcamento || !!HWT.codificarExato(d, orcamento), aceso: acesos / (d.length / 4) };
   }
 
   /**
    * Experimenta as receitas por ordem e devolve o primeiro desenho que cabe
    * e que ainda deixa ver alguma coisa (senão ficaria um mostrador preto).
    */
-  function ajustar(origem, largura, altura, orcamento, receitas, fazer, minimoAceso, transparente) {
-    let quaseBoa = null;
+  function ajustar(origem, largura, altura, orcamento, receitas, fazer, minimoAceso, transparente, maximoAceso) {
+    const teto = maximoAceso || MAXIMO_ACESO;
+    let claroDemais = null, escuroDemais = null;
     for (let k = 0; k < receitas.length; k++) {
       const c = fazer(origem, largura, altura, receitas[k]);
       const m = medir(c, orcamento, transparente);
       if (!m.cabe) continue;
-      const bom = m.aceso >= (minimoAceso || 0) && (!minimoAceso || m.aceso <= MAXIMO_ACESO);
-      if (bom) return { canvas: c, receita: receitas[k], passo: k, aceso: m.aceso };
-      const nota = m.aceso > MAXIMO_ACESO ? 0 : m.aceso;
-      if (!quaseBoa || nota > quaseBoa.aceso) quaseBoa = { canvas: c, receita: receitas[k], passo: k, aceso: nota };
+      const r = { canvas: c, receita: receitas[k], passo: k, aceso: m.aceso };
+      if (m.aceso >= (minimoAceso || 0) && (!minimoAceso || m.aceso <= teto)) return r;
+      // nenhuma receita ficou no ponto: guarda-se a menos má de cada lado,
+      // e no fim prefere-se a menos acesa das acesas de mais
+      if (m.aceso > teto) { if (!claroDemais || m.aceso < claroDemais.aceso) claroDemais = r; }
+      else if (!escuroDemais || m.aceso > escuroDemais.aceso) escuroDemais = r;
     }
-    return quaseBoa;
+    return claroDemais || escuroDemais;
   }
 
   /**
@@ -993,11 +1028,18 @@
       const orig = renderDe(m, true, 466);
       const imF = base.pac.imgs[base.iF];
       carregar(true, "A encaixar o mostrador…");
-      const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
-      if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base");
+      const mostrador = ajustar(orig, imF.largura, imF.altura, null, RECEITAS_FUNDO, desenhoFundo);
+      if (!mostrador) throw new Error("não consegui encaixar o desenho nesta base");
       carregar(true, "A montar o ficheiro…");
       const capa = renderDe(m, false, 466).toDataURL("image/jpeg", 0.9);
-      const feito = await HWT.construir(base.pac, [{ indice: base.iF, canvas: mostrador.canvas }], null, item.nome, capa);
+      const trocas = [{ indice: base.iF, canvas: mostrador.canvas }];
+      // o sempre ligado sai já feito, com o desenho do próprio mostrador
+      const alvoA = base.alvo || HWT.alvoAod(base.pac);
+      if (alvoA) {
+        const a = melhorAod(orig, alvoA.im.largura, alvoA.im.altura);
+        if (a) trocas.push({ onde: alvoA.onde, indice: alvoA.indice, canvas: a.canvas, transparente: true });
+      }
+      const feito = await HWT.construir(base.pac, trocas, null, item.nome, capa, { ponteirosAod: true });
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
       const suave = mostrador.receita.suave || 0;
