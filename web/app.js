@@ -1029,7 +1029,7 @@
     const lista = $("#listaBases");
     candidatas.forEach((c) => {
       const b = document.createElement("button");
-      b.innerHTML = `${c.item.nome}<small>${c.pac.imgs[c.iF].largura}×${c.pac.imgs[c.iF].altura} · sempre ligado ${c.alvo.im.largura}×${c.alvo.im.altura}${c.alvo.onde === "aod" ? " (próprio)" : ""}</small>`;
+      b.innerHTML = `${c.item.nome}<small>${c.pac.imgs[c.iF].largura}×${c.pac.imgs[c.iF].altura} · sempre ligado ${c.alvo.im.largura}×${c.alvo.im.altura}${c.alvo.onde === "wf" ? " (próprio)" : " (a criar)"}</small>`;
       b.onclick = () => { el.classList.add("escondido"); abrirEditorAodComBase(item, orig, c, converter); };
       lista.append(b);
     });
