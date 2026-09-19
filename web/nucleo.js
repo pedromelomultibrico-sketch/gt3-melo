@@ -46,6 +46,7 @@
     sincronizar: () => J(N.sincronizar()),
     encontrar: (on) => J(N.encontrar(on)),
     acertarHora: () => J(N.acertarHora()),
+    escolherRelogio: (end) => J(N.escolherRelogio ? N.escolherRelogio(end) : '{"ok":false,"erro":"núcleo antigo — atualize a app"}'),
     notificar: (t, x) => J(N.notificar(t, x)),
     instalar: (nome, b64) => J(N.instalar(nome, b64)),
     guardar: (nome, b64) => J(N.guardar(nome, b64)),
