@@ -185,8 +185,9 @@
       if (f) bin = await f.async("uint8array"); else zipInterno = null;
     } catch (e) { zipInterno = null; }
     const imgs = lerImagens(bin);
-    // O ecrã sempre ligado não está no watchface.bin: quando existe, vem num
-    // ficheiro próprio, aod.bin, e é DAÍ que o relógio o lê.
+    // O aod.bin, quando existe, é herança: o relógio desenha o ecrã sempre
+    // ligado a partir dos elementos marcados do próprio watchface.bin.
+    // Lê-se só para poder mostrar o que lá está; não se escreve nele.
     let binAod = null, imgsAod = null;
     if (zipInterno && zipInterno.file("aod.bin")) {
       try {
