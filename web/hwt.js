@@ -288,38 +288,327 @@
     return melhor;
   }
 
-  /**
-   * Onde escrever o ecrã sempre ligado. Se a máscara trouxer aod.bin, é lá —
-   * escrever no watchface.bin não tem efeito nenhum no pulso.
-   */
-  function alvoAod(pacote) {
-    if (pacote.imgsAod && pacote.imgsAod.length) {
-      let melhor = -1, area = 0;
-      pacote.imgsAod.forEach((im, i) => {
-        const a = im.largura * im.altura;
-        if (Math.min(im.largura, im.altura) >= 200 && a > area) { area = a; melhor = i; }
-      });
-      if (melhor >= 0) return { onde: "aod", indice: melhor, im: pacote.imgsAod[melhor] };
+  // ---- formato interno das máscaras (protobuf, não XML) ----
+  // Cada elemento do mostrador é { 1: índice, 2: tipo, (3+tipo): conteúdo }.
+  // Dentro do conteúdo há um campo que diz "este elemento aparece no ecrã
+  // sempre ligado". O número desse campo muda com o tipo — imagens 5,
+  // dígitos 6, ponteiros 9. Verificado no relógio a 19/09/2026.
+  const CAMPO_AOD = { 1: 5, 2: 6, 3: 6, 5: 9, 6: 6 };
+
+  function lerVarint(b, i) {
+    let v = 0, mul = 1;
+    const ini = i;
+    for (;;) {
+      if (i >= b.length) throw new Error("varint cortado");
+      const c = b[i++];
+      v += (c & 0x7f) * mul; mul *= 128;
+      if (!(c & 0x80)) break;
+      if (i - ini > 10) throw new Error("varint comprido demais");
     }
-    const f = indiceFundo(pacote);
-    const i = f >= 0 ? indiceAod(pacote, f) : -1;
-    return i >= 0 ? { onde: "wf", indice: i, im: pacote.imgs[i] } : null;
+    return { v, i, crua: b.subarray(ini, i) };
   }
 
-  /** Troca uma ou mais imagens pelos desenhos dados e devolve o .hwt novo (Uint8Array). */
-  async function construir(pacote, indice, canvasFonte, nome, capa) {
-    const trocas = Array.isArray(indice) ? indice : [{ indice, canvas: canvasFonte }];
-    const bin = new Uint8Array(pacote.bin);
-    const binAod = pacote.binAod ? new Uint8Array(pacote.binAod) : null;
-    let bitsMin = 8;
-    for (const t of trocas) {
-      const noAod = t.onde === "aod" && binAod;
-      const lista = noAod ? pacote.imgsAod : pacote.imgs;
-      const r = trocarImagemEm(noAod ? binAod : bin, lista[t.indice], t.canvas, t.transparente);
-      (noAod ? binAod : bin).set(r.bytes, lista[t.indice].dados);
-      bitsMin = Math.min(bitsMin, r.bits);
+  function escreverVarint(n) {
+    const o = [];
+    while (n > 127) { o.push((n % 128) | 0x80); n = Math.floor(n / 128); }
+    o.push(n);
+    return o;
+  }
+
+  function pbLer(b) {
+    const itens = [];
+    let i = 0;
+    while (i < b.length) {
+      const k = lerVarint(b, i); i = k.i;
+      const c = Math.floor(k.v / 8), t = k.v % 8;
+      if (!c) throw new Error("campo 0");
+      if (t === 0) { const r = lerVarint(b, i); itens.push({ c, t, v: r.v, crua: r.crua }); i = r.i; }
+      else if (t === 2) {
+        const r = lerVarint(b, i); i = r.i;
+        if (i + r.v > b.length) throw new Error("comprimento fora do fim");
+        itens.push({ c, t, v: b.subarray(i, i + r.v) }); i += r.v;
+      } else if (t === 1) { if (i + 8 > b.length) throw new Error("fixo64 cortado"); itens.push({ c, t, v: b.subarray(i, i + 8) }); i += 8; }
+      else if (t === 5) { if (i + 4 > b.length) throw new Error("fixo32 cortado"); itens.push({ c, t, v: b.subarray(i, i + 4) }); i += 4; }
+      else throw new Error("tipo " + t);
     }
-    return empacotar(pacote, bin, nome, capa, bitsMin, binAod);
+    return itens;
+  }
+
+  /**
+   * Lê tudo em árvore. Se um pedaço de texto for lido por engano como
+   * mensagem não faz mal nenhum: escrever de volta devolve os mesmos bytes,
+   * porque os varints são guardados tal como vieram.
+   */
+  function pbArvore(b, fundura) {
+    const itens = pbLer(b);
+    if ((fundura || 0) < 12) {
+      for (const it of itens) {
+        if (it.t !== 2 || !it.v.length) continue;
+        try { it.filhos = pbArvore(it.v, (fundura || 0) + 1); } catch (e) { /* é folha */ }
+      }
+    }
+    return itens;
+  }
+
+  function pbBytes(itens) {
+    const pedacos = [];
+    let total = 0;
+    const junta = (a) => { pedacos.push(a); total += a.length; };
+    for (const it of itens) {
+      junta(Uint8Array.from(escreverVarint(it.c * 8 + it.t)));
+      if (it.t === 0) junta(it.crua || Uint8Array.from(escreverVarint(it.v)));
+      else if (it.t === 2) {
+        const v = it.filhos ? pbBytes(it.filhos) : it.v;
+        junta(Uint8Array.from(escreverVarint(v.length)));
+        junta(v);
+      } else junta(it.v);
+    }
+    const saida = new Uint8Array(total);
+    let o = 0;
+    for (const p of pedacos) { saida.set(p, o); o += p.length; }
+    return saida;
+  }
+
+  function pbCampo(itens, c) { return itens.find((x) => x.c === c); }
+  function pbTexto(it) { let s = ""; for (const c of it.v) s += String.fromCharCode(c); return s; }
+  function pbNumero(c, v) { return { c, t: 0, v, crua: Uint8Array.from(escreverVarint(v)) }; }
+  function pbCadeia(c, s) { const v = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) v[i] = s.charCodeAt(i); return { c, t: 2, v }; }
+
+  /**
+   * Chama visita() em cada elemento do mostrador. Dá a lista onde ele vive,
+   * para se poderem acrescentar irmãos (é assim que se marcam os ponteiros).
+   */
+  function varrerElementos(itens, visita) {
+    for (const it of itens) {
+      if (!it.filhos) continue;
+      const i1 = pbCampo(it.filhos, 1), i2 = pbCampo(it.filhos, 2);
+      if (i1 && i1.t === 0 && i2 && i2.t === 0 && i2.v >= 1 && i2.v <= 8) {
+        const cc = pbCampo(it.filhos, 3 + i2.v);
+        if (cc && cc.filhos) {
+          visita({ item: it, indice: i1.v, tipo: i2.v, conteudo: cc.filhos, lista: itens });
+          continue;
+        }
+      }
+      varrerElementos(it.filhos, visita);
+    }
+  }
+
+  // ---- partes do .bin e remontagem ----
+
+  /** Parte o .bin nas suas peças: cabeçalho, desenho e blocos de imagem. */
+  function partes(bin) {
+    const xmllen = u16(bin, 2), maplen = u32(bin, 4);
+    const corpo = 16 + xmllen + maplen + 8;
+    if (maplen % 8 || corpo > bin.length) throw new Error("cabeçalho estranho");
+    const blocos = [];
+    for (let i = 0; i < maplen / 8; i++) {
+      const off = u32(bin, 16 + xmllen + i * 8), sz = u32(bin, 16 + xmllen + i * 8 + 4);
+      blocos.push(sz ? bin.subarray(corpo + off - 8, corpo + off - 8 + sz) : new Uint8Array(0));
+    }
+    return { ver: u16(bin, 0), extra: u32(bin, 12), xml: bin.subarray(16, 16 + xmllen), blocos, assinatura: bin.subarray(corpo - 8, corpo) };
+  }
+
+  /**
+   * Volta a juntar tudo, refazendo a tabela das imagens. É isto que liberta
+   * os desenhos do tamanho em bytes do original: cada imagem pode crescer.
+   */
+  function montar(p) {
+    const maplen = p.blocos.length * 8;
+    let corpoLen = 8;
+    for (const b of p.blocos) corpoLen += b.length;
+    const saida = new Uint8Array(16 + p.xml.length + maplen + corpoLen);
+    const dv = new DataView(saida.buffer);
+    dv.setUint16(0, p.ver, true);
+    dv.setUint16(2, p.xml.length, true);
+    dv.setUint32(4, maplen, true);
+    dv.setUint32(8, corpoLen, true);
+    dv.setUint32(12, p.extra || 0, true);
+    saida.set(p.xml, 16);
+    let o = 16 + p.xml.length, off = 8;
+    for (const b of p.blocos) { dv.setUint32(o, off, true); dv.setUint32(o + 4, b.length, true); o += 8; off += b.length; }
+    saida.set(p.assinatura, o); o += 8;
+    for (const b of p.blocos) { saida.set(b, o); o += b.length; }
+    return saida;
+  }
+
+  /** Codifica os píxeis sem limite de tamanho, com as 8 cabeças de cabeçalho. */
+  function codificarLivre(px, largura, altura, marca) {
+    const tok = tokens(px, 8);
+    let n = 8;
+    for (const t of tok) n += (t.n * 4 > 12 || t.cor === MARCA_U32) ? 12 : t.n * 4;
+    const saida = new Uint8Array(n);
+    saida.set(marca || [0x45, 0x23, 0x88, 0x88], 0);
+    saida[4] = largura & 255; saida[5] = largura >> 8;
+    saida[6] = altura & 255; saida[7] = altura >> 8;
+    let o = 8;
+    for (const t of tok) {
+      const B = t.cor & 255, G = (t.cor >> 8) & 255, R = (t.cor >> 16) & 255, A = (t.cor >>> 24) & 255;
+      if (t.n * 4 > 12 || t.cor === MARCA_U32) {
+        saida.set(MARCA, o); saida[o + 4] = B; saida[o + 5] = G; saida[o + 6] = R; saida[o + 7] = A;
+        saida[o + 8] = t.n & 255; saida[o + 9] = (t.n >> 8) & 255; saida[o + 10] = (t.n >> 16) & 255; saida[o + 11] = (t.n >>> 24) & 255;
+        o += 12;
+      } else {
+        for (let k = 0; k < t.n; k++) { saida[o] = B; saida[o + 1] = G; saida[o + 2] = R; saida[o + 3] = A; o += 4; }
+      }
+    }
+    return saida;
+  }
+
+  // ---- ecrã sempre ligado ----
+
+  function imgPorNome(pacote, nome) {
+    const pos = parseInt(nome, 10) - 1;
+    return pacote.imgs.find((im) => im.pos === pos) || null;
+  }
+
+  /** O lado do ecrã desta máscara (a maior imagem manda). */
+  function ladoEcra(pacote) {
+    let l = 0;
+    for (const im of pacote.imgs) l = Math.max(l, im.largura, im.altura);
+    return l || 466;
+  }
+
+  /**
+   * A imagem que o relógio mostra quando o ecrã está sempre ligado: é a que
+   * está marcada no desenho da máscara. Devolve -1 se a máscara não tiver.
+   */
+  function ranhuraAod(pacote) {
+    const L = ladoEcra(pacote);
+    let melhor = -1, area = 0;
+    try {
+      varrerElementos(pbArvore(partes(pacote.bin).xml), (e) => {
+        if (e.tipo !== 1) return;
+        const f = pbCampo(e.conteudo, CAMPO_AOD[1]), n = pbCampo(e.conteudo, 1);
+        if (!f || f.t !== 0 || f.v !== 1 || !n || n.t !== 2) return;
+        const im = imgPorNome(pacote, pbTexto(n));
+        // algumas máscaras marcam letreiros e dois-pontos: só serve a chapa
+        // do tamanho do ecrã, que é onde cabe o mostrador
+        if (!im || Math.min(im.largura, im.altura) < L * 0.6) return;
+        const a = im.largura * im.altura;
+        if (a > area) { area = a; melhor = pacote.imgs.indexOf(im); }
+      });
+    } catch (err) { return -1; }
+    return melhor;
+  }
+
+  function escurecerPixeis(d, fator, base) {
+    for (let i = 0; i < d.length; i += 4) {
+      if (!d[i + 3]) continue;
+      d[i] = Math.min(255, d[i] * fator + base);
+      d[i + 1] = Math.min(255, d[i + 1] * fator + base);
+      d[i + 2] = Math.min(255, d[i + 2] * fator + base);
+    }
+    return d;
+  }
+
+  /**
+   * Se a máscara não tiver ranhura de sempre ligado, cria uma: uma imagem do
+   * tamanho do ecrã e um elemento marcado, posto por baixo de tudo o resto.
+   */
+  function criarRanhuraAod(pacote, p, arv) {
+    let destino = null;
+    varrerElementos(arv, (e) => { if (!destino) destino = { lista: e.lista, campo: e.item.c, indice: e.indice }; });
+    if (!destino) return -1;
+    const L = ladoEcra(pacote);
+    const vazio = new Uint8ClampedArray(L * L * 4);
+    p.blocos.push(codificarLivre(vazio, L, L, pacote.bin.subarray(pacote.imgs[0].inicio, pacote.imgs[0].inicio + 4)));
+    const nome = ("00" + p.blocos.length).slice(-3);
+    const conteudo = [pbCadeia(1, nome), { c: 2, t: 2, filhos: [pbNumero(1, 0), pbNumero(2, 0)] }, pbNumero(CAMPO_AOD[1], 1)];
+    destino.lista.unshift({ c: destino.campo, t: 2, filhos: [pbNumero(1, 0), pbNumero(2, 1), { c: 4, t: 2, filhos: conteudo }] });
+    return p.blocos.length - 1;
+  }
+
+  /**
+   * Acrescenta ponteiros de hora e minuto ao ecrã sempre ligado, com cópias
+   * escurecidas dos ponteiros da própria máscara. O ponteiro dos segundos
+   * fica de fora de propósito: gastaria bateria e marcaria o ecrã.
+   */
+  function ponteirosAod(pacote, p, arv) {
+    const maos = [];
+    let jaMarcado = false;
+    varrerElementos(arv, (e) => {
+      if (e.tipo !== 5) return;
+      const fa = pbCampo(e.conteudo, CAMPO_AOD[5]);
+      if (fa && fa.t === 0 && fa.v === 1) { jaMarcado = true; return; }
+      const n = pbCampo(e.conteudo, 1), r = pbCampo(e.conteudo, 2), f = pbCampo(e.conteudo, 6);
+      if (!n || n.t !== 2 || !r || !r.filhos || !f || f.t !== 0) return;
+      const im = imgPorNome(pacote, pbTexto(n));
+      if (!im) return;
+      const larg = (pbCampo(r.filhos, 3) || {}).v || 0;
+      maos.push({ e, im, fonte: f.v, larguraRect: larg });
+    });
+    if (jaMarcado || !maos.length) return 0;
+    const L = ladoEcra(pacote);
+    const bons = maos.filter((m) => {
+      const fino = Math.min(m.im.largura, m.im.altura) / Math.max(m.im.largura, m.im.altura);
+      return fino >= 0.25 && m.larguraRect >= L * 0.6;   // fora: segundos e ponteiros de submostrador
+    });
+    const porFonte = [];
+    for (const m of bons) if (!porFonte.some((x) => x.fonte === m.fonte)) porFonte.push(m);
+    const escolhidos = porFonte.slice(0, 2);
+    let indice = 0;
+    varrerElementos(arv, (e) => { indice = Math.max(indice, e.indice); });
+    for (const m of escolhidos) {
+      const d = descodificar(pacote.bin, m.im);
+      escurecerPixeis(d.data, 0.6, 40);
+      p.blocos.push(codificarLivre(d.data, m.im.largura, m.im.altura, pacote.bin.subarray(m.im.inicio, m.im.inicio + 4)));
+      const nome = ("00" + p.blocos.length).slice(-3);
+      const conteudo = m.e.conteudo.filter((x) => x.c !== CAMPO_AOD[5]).map((x) => (x.c === 1 ? pbCadeia(1, nome) : x));
+      conteudo.push(pbNumero(CAMPO_AOD[5], 1));
+      m.e.lista.push({ c: m.e.item.c, t: 2, filhos: [pbNumero(1, ++indice), pbNumero(2, 5), { c: 8, t: 2, filhos: conteudo }] });
+    }
+    return escolhidos.length;
+  }
+
+  /**
+   * Onde escrever o ecrã sempre ligado: na ranhura marcada pela própria
+   * máscara. Se não houver, avisa que é preciso criar uma.
+   */
+  function alvoAod(pacote) {
+    const r = ranhuraAod(pacote);
+    if (r >= 0) return { onde: "wf", indice: r, im: pacote.imgs[r] };
+    // sem ranhura, abre-se uma — mas só se a máscara for do formato novo,
+    // o único em que se pode marcar o que aparece no sempre ligado
+    let tem = false;
+    try { varrerElementos(pbArvore(partes(pacote.bin).xml), () => { tem = true; }); } catch (e) { return null; }
+    if (!tem) return null;
+    const L = ladoEcra(pacote);
+    return { onde: "novo", indice: -1, im: { largura: L, altura: L } };
+  }
+
+  /**
+   * Troca uma ou mais imagens pelos desenhos dados e devolve o .hwt novo.
+   * A tabela das imagens é refeita, por isso um desenho já não tem de caber
+   * nos bytes exatos do original: sai sempre com a qualidade toda.
+   */
+  async function construir(pacote, indice, canvasFonte, nome, capa, opcoes) {
+    const trocas = Array.isArray(indice) ? indice : [{ indice, canvas: canvasFonte }];
+    const o = opcoes || {};
+    const p = partes(pacote.bin);
+    const arv = pbArvore(p.xml);
+    let mexeuNoDesenho = false;
+    for (const t of trocas) {
+      let im = t.indice >= 0 ? pacote.imgs[t.indice] : null;
+      if (!im && t.onde === "novo") {
+        const novoPos = criarRanhuraAod(pacote, p, arv);
+        if (novoPos < 0) continue;
+        mexeuNoDesenho = true;
+        const L = ladoEcra(pacote);
+        p.blocos[novoPos] = codificarLivre(prepararDesenho(t.canvas, L, L, t.transparente), L, L, marcaDe(pacote));
+        continue;
+      }
+      if (!im) continue;
+      const px = prepararDesenho(t.canvas, im.largura, im.altura, t.transparente);
+      p.blocos[im.pos] = codificarLivre(px, im.largura, im.altura, pacote.bin.subarray(im.inicio, im.inicio + 4));
+    }
+    if (o.ponteirosAod && ponteirosAod(pacote, p, arv)) mexeuNoDesenho = true;
+    if (mexeuNoDesenho) p.xml = pbBytes(arv);
+    return empacotar(pacote, montar(p), nome, capa, 8);
+  }
+
+  function marcaDe(pacote) {
+    const i = pacote.imgs[0];
+    return i ? pacote.bin.subarray(i.inicio, i.inicio + 4) : null;
   }
 
   /**
