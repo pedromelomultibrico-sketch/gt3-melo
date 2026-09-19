@@ -19,6 +19,7 @@
     },
     ligar: () => '{"ok":true}', sincronizar: () => '{"ok":true}', encontrar: () => '{"ok":true}', acertarHora: () => '{"ok":true}',
     notificar: () => '{"ok":true}',
+    escolherRelogio: () => '{"ok":true}',
     instalar: (n) => JSON.stringify({ ok: false, erro: "Só funciona dentro da app GT3 Melo (" + n + ")" }),
     guardar: (nome, b64) => { const a = document.createElement("a"); a.href = "data:application/octet-stream;base64," + b64; a.download = nome; a.click(); return '{"ok":true,"caminho":"Transferências"}'; },
     ficheiroPendente: () => "",
