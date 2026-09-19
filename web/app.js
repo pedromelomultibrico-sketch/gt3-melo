@@ -540,8 +540,8 @@
     carregar(true, "A encaixar o mostrador…");
     try {
       const imF = base.pac.imgs[base.iF];
-      const mostrador = ajustar(orig, imF.largura, imF.altura, imF.fim - imF.dados, RECEITAS_FUNDO, desenhoFundo);
-      if (!mostrador) throw new Error("o desenho tem demasiado detalhe para o espaço desta base; escolha outra base");
+      const mostrador = ajustar(orig, imF.largura, imF.altura, null, RECEITAS_FUNDO, desenhoFundo);
+      if (!mostrador) throw new Error("não consegui encaixar o desenho nesta base; escolha outra");
       await montarEditorAod(item, orig, base.pac, base.alvo, base, mostrador);
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
