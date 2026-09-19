@@ -1032,7 +1032,14 @@
       if (!mostrador) throw new Error("não consegui encaixar o desenho nesta base");
       carregar(true, "A montar o ficheiro…");
       const capa = renderDe(m, false, 466).toDataURL("image/jpeg", 0.9);
-      const feito = await HWT.construir(base.pac, [{ indice: base.iF, canvas: mostrador.canvas }], null, item.nome, capa);
+      const trocas = [{ indice: base.iF, canvas: mostrador.canvas }];
+      // o sempre ligado sai já feito, com o desenho do próprio mostrador
+      const alvoA = base.alvo || HWT.alvoAod(base.pac);
+      if (alvoA) {
+        const a = melhorAod(orig, alvoA.im.largura, alvoA.im.altura);
+        if (a) trocas.push({ onde: alvoA.onde, indice: alvoA.indice, canvas: a.canvas, transparente: true });
+      }
+      const feito = await HWT.construir(base.pac, trocas, null, item.nome, capa, { ponteirosAod: true });
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
       const suave = mostrador.receita.suave || 0;
