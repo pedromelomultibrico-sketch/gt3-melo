@@ -549,10 +549,11 @@
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
 
-  async function montarEditorAod(item, orig, pac, alvo, base, mostrador) {
+  async function montarEditorAod(item, orig, pac, alvo, base, mostrador, converter) {
     AOD.item = item; AOD.pac = pac; AOD.alvo = alvo;
     AOD.base = base || null; AOD.mostrador = mostrador || null;
     AOD.orig = orig;
+    if (converter) return converterEInstalar();
     $("#aodNome").textContent = item.nome;
     $("#aodTrocarBase").classList.toggle("escondido", !base);
     const aviso = $("#aodAviso");
