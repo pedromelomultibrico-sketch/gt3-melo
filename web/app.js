@@ -497,7 +497,7 @@
   }
 
   /** Abre o editor do ecrã sempre ligado para uma máscara já guardada. */
-  async function abrirEditorAod(item) {
+  async function abrirEditorAod(item, converter) {
     carregar(true, "A ir buscar a máscara…");
     try {
       const b64 = (await fetch("/api/ficheiro/" + item.id + "?t=" + Date.now()).then((r) => r.text())).trim();
