@@ -869,12 +869,14 @@
       const c = fazer(origem, largura, altura, receitas[k]);
       const m = medir(c, orcamento, transparente);
       if (!m.cabe) continue;
-      const bom = m.aceso >= (minimoAceso || 0) && (!minimoAceso || m.aceso <= MAXIMO_ACESO);
-      if (bom) return { canvas: c, receita: receitas[k], passo: k, aceso: m.aceso };
-      const nota = m.aceso > MAXIMO_ACESO ? 0 : m.aceso;
-      if (!quaseBoa || nota > quaseBoa.aceso) quaseBoa = { canvas: c, receita: receitas[k], passo: k, aceso: nota };
+      const r = { canvas: c, receita: receitas[k], passo: k, aceso: m.aceso };
+      if (m.aceso >= (minimoAceso || 0) && (!minimoAceso || m.aceso <= teto)) return r;
+      // nenhuma receita ficou no ponto: guarda-se a menos má de cada lado,
+      // e no fim prefere-se a menos acesa das acesas de mais
+      if (m.aceso > teto) { if (!claroDemais || m.aceso < claroDemais.aceso) claroDemais = r; }
+      else if (!escuroDemais || m.aceso > escuroDemais.aceso) escuroDemais = r;
     }
-    return quaseBoa;
+    return claroDemais || escuroDemais;
   }
 
   /**
