@@ -470,6 +470,12 @@ public class PonteNucleo {
                     case "bateria": i = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS); break;
                     default: return;
                 }
+                // estes ecrãs precisam de um aparelho; sem ele rebentam
+                if (d == null && !"emparelhar".equals(ecra) && !"bateria".equals(ecra)
+                        && !"definicoes_app".equals(ecra) && !"avancado".equals(ecra)) {
+                    Toast.makeText(act, "Emparelhe primeiro um relógio.", Toast.LENGTH_LONG).show();
+                    return;
+                }
                 if (d != null) i.putExtra(GBDevice.EXTRA_DEVICE, d);
                 act.startActivity(i);
             } catch (Exception e) {
