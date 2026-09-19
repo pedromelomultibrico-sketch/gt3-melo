@@ -36,6 +36,33 @@
   window.voltar = function () { if (!pilha.length) return false; ir(pilha.pop(), true); return true; };
   $$("#navegacao button").forEach((b) => (b.onclick = () => { pilha.length = 0; ir(b.dataset.ecra, true); }));
 
+  /** Com vários aparelhos emparelhados, deixa escolher qual é o relógio. */
+  function mostrarEscolhaAparelhos(lista) {
+    const cartao = $("#escolhaRelogio");
+    if (!cartao) return;
+    if (!lista || lista.length < 2) { cartao.classList.add("escondido"); return; }
+    cartao.classList.remove("escondido");
+    const el = $("#listaAparelhos");
+    el.innerHTML = "";
+    if (!N.podeEscolher) {
+      el.innerHTML = '<p class="suave pequeno">A app está a usar <b>' + ((lista.find((x) => x.usado) || lista[0]).nome || "o primeiro da lista")
+        + '</b>. Para poder escolher, atualize o núcleo em Mais › Procurar atualização.</p>';
+      return;
+    }
+    lista.forEach((x) => {
+      const b = document.createElement("button");
+      b.className = "bt pequeno" + (x.usado ? " ouro" : "");
+      b.textContent = (x.audio ? "🎧 " : "⌚ ") + (x.nome || x.endereco || "aparelho");
+      b.onclick = async () => {
+        const r = N.escolherRelogio(x.endereco || "");
+        if (!r || !r.ok) return toast("⚠ " + ((r && r.erro) || "não consegui escolher"));
+        toast("A trabalhar com " + (x.nome || "este aparelho"));
+        atualizarDados();
+      };
+      el.append(b);
+    });
+  }
+
   // ---------- estado do relógio ----------
   const estado = { bateria: -1, passos: -1, fc: -1 };
   function mostrarDispositivo(info) {
