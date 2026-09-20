@@ -586,12 +586,16 @@
     if (jaMarcado || !maos.length) return 0;
     const L = ladoEcra(pacote);
     const bons = maos.filter((m) => {
+      if (m.fonte === FONTE_SEGUNDO) return false;
+      if (m.fonte === FONTE_HORA || m.fonte === FONTE_MINUTO) return true;
+      // fonte desconhecida: pela forma — fora os finos (segundos) e os pequenos
       const fino = Math.min(m.im.largura, m.im.altura) / Math.max(m.im.largura, m.im.altura);
-      return fino >= 0.25 && m.larguraRect >= L * 0.6;   // fora: segundos e ponteiros de submostrador
+      return fino >= 0.25 && m.larguraRect >= L * 0.6;
     });
     const porFonte = [];
     for (const m of bons) if (!porFonte.some((x) => x.fonte === m.fonte)) porFonte.push(m);
-    const escolhidos = porFonte.slice(0, 2);
+    const peso = (f) => (f === FONTE_HORA ? 0 : f === FONTE_MINUTO ? 1 : 2);
+    const escolhidos = porFonte.sort((a, b) => peso(a.fonte) - peso(b.fonte)).slice(0, 2);
     let indice = 0;
     varrerElementos(arv, (e) => { indice = Math.max(indice, e.indice); });
     for (const m of escolhidos) {
