@@ -22,8 +22,8 @@ p{margin:6px 0}
 .arco{fill:none;stroke:var(--ouro);stroke-width:9;stroke-linecap:round;stroke-dasharray:276.46;stroke-dashoffset:276.46;transition:stroke-dashoffset .6s}
 .bateriaTxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .bateriaTxt b{font-size:22px}.bateriaTxt small{font-size:10px;color:var(--suave)}
-.grelha4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px}
-.grelha3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grelha4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:6px}
+.grelha3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .acao{background:var(--cartao);border:1px solid var(--linha);color:var(--texto);border-radius:16px;padding:12px 4px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:6px;font-family:inherit}
 .acao i{font-style:normal;font-size:22px;color:var(--ouro)}
 .acao:active,.bt:active,.lista button:active{transform:scale(.97)}
