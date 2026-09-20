@@ -509,7 +509,10 @@
       const alvo = HWT.alvoAod(pac);
       const iA = alvo && alvo.onde === "wf" ? alvo.indice : -1;
       // a face muitas vezes está repartida por várias imagens do tamanho do ecrã
-      let orig = HWT.faceComposta(pac, iA) || telaDe(HWT.descodificar(pac.bin, pac.imgs[iF]));
+      // primeiro pelo desenho da máscara (sem a pré-visualização nem os
+      // ponteiros parados); só se isso não der é que se juntam as chapas todas
+      let orig = HWT.faceDoDesenho(pac);
+      if (!orig || riquezaTela(orig) < 0.01) orig = HWT.faceComposta(pac, iA) || telaDe(HWT.descodificar(pac.bin, pac.imgs[iF]));
       // se mesmo assim sair preta, resta a pré-visualização que vem no ficheiro
       let daCapa = false;
       if (riquezaTela(orig) < 0.01) {
