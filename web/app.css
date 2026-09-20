@@ -1,6 +1,6 @@
 :root{--fundo:#000;--cartao:#121214;--linha:#26262a;--texto:#f2f2f2;--suave:#9a9aa2;--ouro:#d4af37;--ouro2:#f0d27a;--perigo:#e5484d;--ok:#3fb950}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--fundo);color:var(--texto);font-family:Inter,system-ui,sans-serif;font-size:15px}
+html,body{margin:0;background:var(--fundo);color:var(--texto);font-family:Inter,system-ui,sans-serif;font-size:15px;overflow-x:hidden}
 body{padding-bottom:calc(72px + env(safe-area-inset-bottom))}
 #topo{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:rgba(0,0,0,.9);backdrop-filter:blur(8px);border-bottom:1px solid var(--linha)}
 .marca{font-weight:800;font-size:20px;letter-spacing:.5px}.ouro{color:var(--ouro)}
