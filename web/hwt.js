@@ -469,6 +469,52 @@
   }
 
   /**
+   * A face como o relógio a pinta: só as chapas que o desenho da máscara manda
+   * desenhar, pela ordem dele. Deixa de fora a imagem de pré-visualização —
+   * muitas máscaras trazem-na com os ponteiros já pintados, parados na posição
+   * de fábrica — e deixa de fora a chapa do sempre ligado.
+   */
+  function faceDoDesenho(pacote) {
+    let arv;
+    try { arv = pbArvore(partes(pacote.bin).xml); } catch (e) { return null; }
+    const L = ladoEcra(pacote);
+    const chapas = [];
+    varrerElementos(arv, (e) => {
+      if (e.tipo !== 1) return;
+      const f = pbCampo(e.conteudo, CAMPO_AOD[1]);
+      if (f && f.t === 0 && f.v === 1) return;   // essa é a do sempre ligado
+      const n = pbCampo(e.conteudo, 1);
+      if (!n || n.t !== 2) return;
+      const im = imgPorNome(pacote, pbTexto(n));
+      if (!im || Math.min(im.largura, im.altura) < L * 0.6) return;
+      const p2 = pbCampo(e.conteudo, 2);
+      let x = 0, y = 0;
+      if (p2 && p2.filhos) {
+        x = (pbCampo(p2.filhos, 1) || {}).v || 0;
+        y = (pbCampo(p2.filhos, 2) || {}).v || 0;
+        if (x > L || y > L) { x = 0; y = 0; }
+      }
+      chapas.push({ im, x, y });
+    });
+    if (!chapas.length) return null;
+    const c = document.createElement("canvas");
+    c.width = c.height = L;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, L, L);
+    for (const ch of chapas) {
+      const t2 = document.createElement("canvas");
+      t2.width = ch.im.largura; t2.height = ch.im.altura;
+      t2.getContext("2d").putImageData(descodificar(pacote.bin, ch.im), 0, 0);
+      ctx.drawImage(t2, ch.x, ch.y);
+    }
+    return c;
+  }
+
+  // Quem é quem, pelo número da fonte de dados: 150 horas, 153 minutos,
+  // 154 segundos. Os segundos nunca vão para o sempre ligado.
+  const FONTE_HORA = 150, FONTE_MINUTO = 153, FONTE_SEGUNDO = 154;
+
+  /**
    * A imagem que o relógio mostra quando o ecrã está sempre ligado: é a que
    * está marcada no desenho da máscara. Devolve -1 se a máscara não tiver.
    */
