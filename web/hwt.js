@@ -469,6 +469,52 @@
   }
 
   /**
+   * A face como o relógio a pinta: só as chapas que o desenho da máscara manda
+   * desenhar, pela ordem dele. Deixa de fora a imagem de pré-visualização —
+   * muitas máscaras trazem-na com os ponteiros já pintados, parados na posição
+   * de fábrica — e deixa de fora a chapa do sempre ligado.
+   */
+  function faceDoDesenho(pacote) {
+    let arv;
+    try { arv = pbArvore(partes(pacote.bin).xml); } catch (e) { return null; }
+    const L = ladoEcra(pacote);
+    const chapas = [];
+    varrerElementos(arv, (e) => {
+      if (e.tipo !== 1) return;
+      const f = pbCampo(e.conteudo, CAMPO_AOD[1]);
+      if (f && f.t === 0 && f.v === 1) return;   // essa é a do sempre ligado
+      const n = pbCampo(e.conteudo, 1);
+      if (!n || n.t !== 2) return;
+      const im = imgPorNome(pacote, pbTexto(n));
+      if (!im || Math.min(im.largura, im.altura) < L * 0.6) return;
+      const p2 = pbCampo(e.conteudo, 2);
+      let x = 0, y = 0;
+      if (p2 && p2.filhos) {
+        x = (pbCampo(p2.filhos, 1) || {}).v || 0;
+        y = (pbCampo(p2.filhos, 2) || {}).v || 0;
+        if (x > L || y > L) { x = 0; y = 0; }
+      }
+      chapas.push({ im, x, y });
+    });
+    if (!chapas.length) return null;
+    const c = document.createElement("canvas");
+    c.width = c.height = L;
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, L, L);
+    for (const ch of chapas) {
+      const t2 = document.createElement("canvas");
+      t2.width = ch.im.largura; t2.height = ch.im.altura;
+      t2.getContext("2d").putImageData(descodificar(pacote.bin, ch.im), 0, 0);
+      ctx.drawImage(t2, ch.x, ch.y);
+    }
+    return c;
+  }
+
+  // Quem é quem, pelo número da fonte de dados: 150 horas, 153 minutos,
+  // 154 segundos. Os segundos nunca vão para o sempre ligado.
+  const FONTE_HORA = 150, FONTE_MINUTO = 153, FONTE_SEGUNDO = 154;
+
+  /**
    * A imagem que o relógio mostra quando o ecrã está sempre ligado: é a que
    * está marcada no desenho da máscara. Devolve -1 se a máscara não tiver.
    */
@@ -540,12 +586,16 @@
     if (jaMarcado || !maos.length) return 0;
     const L = ladoEcra(pacote);
     const bons = maos.filter((m) => {
+      if (m.fonte === FONTE_SEGUNDO) return false;
+      if (m.fonte === FONTE_HORA || m.fonte === FONTE_MINUTO) return true;
+      // fonte desconhecida: pela forma — fora os finos (segundos) e os pequenos
       const fino = Math.min(m.im.largura, m.im.altura) / Math.max(m.im.largura, m.im.altura);
-      return fino >= 0.25 && m.larguraRect >= L * 0.6;   // fora: segundos e ponteiros de submostrador
+      return fino >= 0.25 && m.larguraRect >= L * 0.6;
     });
     const porFonte = [];
     for (const m of bons) if (!porFonte.some((x) => x.fonte === m.fonte)) porFonte.push(m);
-    const escolhidos = porFonte.slice(0, 2);
+    const peso = (f) => (f === FONTE_HORA ? 0 : f === FONTE_MINUTO ? 1 : 2);
+    const escolhidos = porFonte.sort((a, b) => peso(a.fonte) - peso(b.fonte)).slice(0, 2);
     let indice = 0;
     varrerElementos(arv, (e) => { indice = Math.max(indice, e.indice); });
     for (const m of escolhidos) {
@@ -681,5 +731,5 @@
     return btoa(s);
   }
 
-  window.HWT = { abrir, lerImagens, descodificar, paraDataURL, indiceFundo, indiceAod, construir, codificarExato, codificarLivre, paraBase64, opacidade, riqueza, faceComposta, alvoAod, ranhuraAod, ponteirosAod, criarRanhuraAod, ladoEcra, prepararDesenho, partes, montar, pbArvore, pbBytes, varrerElementos };
+  window.HWT = { abrir, lerImagens, descodificar, paraDataURL, indiceFundo, indiceAod, construir, codificarExato, codificarLivre, paraBase64, opacidade, riqueza, faceComposta, faceDoDesenho, alvoAod, ranhuraAod, ponteirosAod, criarRanhuraAod, ladoEcra, prepararDesenho, partes, montar, pbArvore, pbBytes, varrerElementos };
 })();
