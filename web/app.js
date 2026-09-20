@@ -808,12 +808,16 @@
   const LIMITE_ACESO = 0.5;
 
   /** Mostradores escuros: guarda as cores do que está aceso. */
+  // As primeiras não desfocam nem cortam cores: enquanto cada imagem tinha de
+  // caber num tamanho fixo isso não era possível, e o desenho saía lavado.
   const RECEITAS_COR = [
+    { fracao: 0.1 }, { fracao: 0.08 }, { fracao: 0.06 }, { fracao: 0.04 },
     { fracao: 0.22, niveis: 6 }, { fracao: 0.16, niveis: 5 },
     { suave: 1, fracao: 0.12, niveis: 5 }, { suave: 1, fracao: 0.09, niveis: 4 },
   ];
-  /** A uma cor só: ocupa muito menos espaço, por isso cabe muito mais desenho. */
+  /** A uma cor só: para mostradores de fundo claro, onde o desenho é invertido. */
   const RECEITAS_UMA_COR = [
+    { fracao: 0.1, cor: "#ffffff" }, { fracao: 0.08, cor: "#ffffff" }, { fracao: 0.06, cor: "#ffffff" },
     { suave: 1, fracao: 0.2, cor: "#ffffff" }, { suave: 1, fracao: 0.16, cor: "#ffffff" },
     { suave: 1, fracao: 0.13, cor: "#ffffff" }, { suave: 1, fracao: 0.1, cor: "#d4af37" },
     { suave: 2, fracao: 0.08, cor: "#d4af37" }, { suave: 2, fracao: 0.06, cor: "#ffffff" },
