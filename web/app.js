@@ -1135,7 +1135,8 @@
         const a = melhorAod(orig, alvoA.im.largura, alvoA.im.altura);
         if (a) trocas.push({ onde: alvoA.onde, indice: alvoA.indice, canvas: a.canvas, transparente: true });
       }
-      const feito = await HWT.construir(base.pac, trocas, null, item.nome, capa, { ponteirosAod: true });
+      const feito = await HWT.construir(base.pac, trocas, null, item.nome, capa,
+        { ponteirosAod: true, valores: dados.vivos });
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
       const suave = mostrador.receita.suave || 0;
