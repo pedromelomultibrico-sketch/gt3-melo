@@ -731,5 +731,5 @@
     return btoa(s);
   }
 
-  window.HWT = { abrir, lerImagens, descodificar, paraDataURL, indiceFundo, indiceAod, construir, codificarExato, codificarLivre, paraBase64, opacidade, riqueza, faceComposta, faceDoDesenho, alvoAod, ranhuraAod, ponteirosAod, criarRanhuraAod, ladoEcra, prepararDesenho, partes, montar, pbArvore, pbBytes, varrerElementos };
+  window.HWT = { abrir, lerImagens, descodificar, paraDataURL, indiceFundo, indiceAod, construir, codificarExato, codificarLivre, paraBase64, opacidade, riqueza, faceComposta, faceDoDesenho, acrescentarValor, alvoAod, ranhuraAod, ponteirosAod, criarRanhuraAod, ladoEcra, prepararDesenho, partes, montar, pbArvore, pbBytes, varrerElementos };
 })();
