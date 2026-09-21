@@ -1140,6 +1140,7 @@
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
       const suave = mostrador.receita.suave || 0;
+      const quantos = dados.vivos.length;
       res(N.instalar((item.nome || "mascara") + ".hwt", b64),
         "Enviada. Escolha-a depois no pulso."
         + (quantos ? " " + quantos + (quantos === 1 ? " valor é preenchido" : " valores são preenchidos") + " pelo relógio." : "")
