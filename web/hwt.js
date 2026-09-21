@@ -684,6 +684,7 @@
       const px = prepararDesenho(t.canvas, im.largura, im.altura, t.transparente);
       p.blocos[im.pos] = codificarLivre(px, im.largura, im.altura, pacote.bin.subarray(im.inicio, im.inicio + 4));
     }
+    for (const v of o.valores || []) if (acrescentarValor(pacote, p, arv, v)) mexeuNoDesenho = true;
     if (o.ponteirosAod && ponteirosAod(pacote, p, arv)) mexeuNoDesenho = true;
     if (mexeuNoDesenho) p.xml = pbBytes(arv);
     return empacotar(pacote, montar(p), nome, capa, 8);
