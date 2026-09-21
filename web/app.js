@@ -1118,7 +1118,10 @@
       const base = (await baseHabitual()) || (await baseIncluida());
       if (!base) throw new Error("não há nenhuma máscara base guardada; instale primeiro uma máscara .hwt");
       const m = Estudio.normalizar(item);
-      const orig = renderDe(m, true, 466);
+      // os dados passam a ser pedidos ao relógio: saem do desenho e entram
+      // como elementos vivos; no mostrador ficam só os sinais à volta deles
+      const dados = valoresVivos(m);
+      const orig = renderDe(m, true, 466, dados.enfeites);
       const imF = base.pac.imgs[base.iF];
       carregar(true, "A encaixar o mostrador…");
       const mostrador = ajustar(orig, imF.largura, imF.altura, null, RECEITAS_FUNDO, desenhoFundo);
