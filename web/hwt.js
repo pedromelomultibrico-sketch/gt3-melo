@@ -292,8 +292,8 @@
   // Cada elemento do mostrador é { 1: índice, 2: tipo, (3+tipo): conteúdo }.
   // Dentro do conteúdo há um campo que diz "este elemento aparece no ecrã
   // sempre ligado". O número desse campo muda com o tipo — imagens 5,
-  // dígitos 6, ponteiros 9. Verificado no relógio a 19/09/2026.
-  const CAMPO_AOD = { 1: 5, 2: 6, 3: 6, 5: 9, 6: 6 };
+  // dígitos 6, valores 13, ponteiros 9, anéis 12. Verificado no relógio.
+  const CAMPO_AOD = { 1: 5, 2: 6, 3: 13, 5: 9, 6: 6, 7: 12 };
 
   function lerVarint(b, i) {
     let v = 0, mul = 1;
