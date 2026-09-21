@@ -12,7 +12,7 @@ Com --exigir sai com erro se a máscara não tiver ranhura de sempre ligado —
 """
 import sys, io, zipfile, struct
 
-CAMPO_AOD = {1: 5, 2: 6, 3: 6, 5: 9, 6: 6}
+CAMPO_AOD = {1: 5, 2: 6, 3: 13, 5: 9, 6: 6, 7: 12}
 
 
 def ler_varint(b, i):
