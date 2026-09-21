@@ -1043,6 +1043,72 @@
   }
 
   /**
+   * Dados que o relógio sabe preencher sozinho, e o número por que os pede.
+   * A tabela toda está em ci/NUMEROS-DO-RELOGIO.md.
+   */
+  const FONTE = { passos: 0, batimentos: 2, bateria: 9, hora: 12, minuto: 13, dia: 17, mes: 24 };
+  /** Camadas do Estúdio que passam a ser preenchidas pelo relógio. */
+  const CAMADAS_VIVAS = {
+    hora: { partes: [{ fonte: FONTE.hora, casas: 2 }, { texto: ":" }, { fonte: FONTE.minuto, casas: 2 }] },
+    data: { partes: [{ fonte: FONTE.dia, casas: 2 }, { texto: "/" }, { fonte: FONTE.mes, casas: 2 }] },
+    bateria: { partes: [{ texto: "▮ " }, { fonte: FONTE.bateria, casas: 2 }, { texto: "%" }] },
+    passos: { partes: [{ texto: "👣 " }, { fonte: FONTE.passos, casas: 4 }] },
+    batimentos: { partes: [{ texto: "♥ " }, { fonte: FONTE.batimentos, casas: 2 }] },
+  };
+
+  /** Os dez algarismos desenhados no estilo da camada, para o relógio os usar. */
+  function algarismosDe(camada) {
+    const fonte = (camada.peso || 400) + " " + camada.tamanho + 'px "' + (camada.fonte || "Inter") + '", sans-serif';
+    const regua = document.createElement("canvas").getContext("2d");
+    regua.font = fonte;
+    let larg = 0;
+    for (let d = 0; d < 10; d++) larg = Math.max(larg, regua.measureText(String(d)).width);
+    larg = Math.ceil(larg) + 4;
+    const alt = Math.ceil(camada.tamanho * 1.4);
+    const telas = [];
+    for (let d = 0; d < 10; d++) {
+      const c = document.createElement("canvas");
+      c.width = larg; c.height = alt;
+      const x = c.getContext("2d");
+      x.font = fonte; x.fillStyle = camada.cor || "#ffffff";
+      x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText(String(d), larg / 2, alt / 2);
+      telas.push(c);
+    }
+    return { telas, larg, alt, fonte };
+  }
+
+  /**
+   * Prepara os valores vivos de um desenho: devolve o que o relógio vai
+   * preencher e o que fica pintado à volta (os sinais, o ▮, o ♥).
+   * As camadas sem número conhecido — autonomia, dia da semana, ponteiros —
+   * continuam pintadas, e por isso paradas.
+   */
+  function valoresVivos(m) {
+    const vivos = [], enfeites = [], pintadas = [];
+    for (const c of m.camadas) {
+      const receita = CAMADAS_VIVAS[c.tipo];
+      if (!receita) { if (Estudio.DINAMICAS.includes(c.tipo)) pintadas.push(c.tipo); continue; }
+      const a = algarismosDe(c);
+      const regua = document.createElement("canvas").getContext("2d");
+      regua.font = a.fonte;
+      let total = 0;
+      for (const p of receita.partes) total += p.texto ? regua.measureText(p.texto).width : p.casas * a.larg;
+      let x = c.x - total / 2;
+      for (const p of receita.partes) {
+        if (p.texto) {
+          enfeites.push({ texto: p.texto, x: x, y: c.y, camada: c, fonte: a.fonte });
+          x += regua.measureText(p.texto).width;
+        } else {
+          vivos.push({ fonte: p.fonte, x: x, y: c.y - a.alt / 2, telas: a.telas });
+          x += p.casas * a.larg;
+        }
+      }
+    }
+    return { vivos, enfeites, pintadas };
+  }
+
+  /**
    * Instala uma máscara desenhada por mim. Como não é um ficheiro .hwt, o desenho
    * assenta numa máscara base — a habitual, ou a que vem com a app.
    */
@@ -1052,7 +1118,10 @@
       const base = (await baseHabitual()) || (await baseIncluida());
       if (!base) throw new Error("não há nenhuma máscara base guardada; instale primeiro uma máscara .hwt");
       const m = Estudio.normalizar(item);
-      const orig = renderDe(m, true, 466);
+      // os dados passam a ser pedidos ao relógio: saem do desenho e entram
+      // como elementos vivos; no mostrador ficam só os sinais à volta deles
+      const dados = valoresVivos(m);
+      const orig = renderDe(m, true, 466, dados.enfeites);
       const imF = base.pac.imgs[base.iF];
       carregar(true, "A encaixar o mostrador…");
       const mostrador = ajustar(orig, imF.largura, imF.altura, null, RECEITAS_FUNDO, desenhoFundo);
@@ -1066,13 +1135,16 @@
         const a = melhorAod(orig, alvoA.im.largura, alvoA.im.altura);
         if (a) trocas.push({ onde: alvoA.onde, indice: alvoA.indice, canvas: a.canvas, transparente: true });
       }
-      const feito = await HWT.construir(base.pac, trocas, null, item.nome, capa, { ponteirosAod: true });
+      const feito = await HWT.construir(base.pac, trocas, null, item.nome, capa,
+        { ponteirosAod: true, valores: dados.vivos });
       carregar(true, "A enviar para o relógio…");
       const b64 = HWT.paraBase64(feito.bytes);
       const suave = mostrador.receita.suave || 0;
+      const quantos = dados.vivos.length;
       res(N.instalar((item.nome || "mascara") + ".hwt", b64),
-        "Enviada. Escolha-a depois no pulso. Os ponteiros e números são os da " + base.item.nome + "."
-        + (suave ? " O desenho foi suavizado " + suave + "px para caber." : ""));
+        "Enviada. Escolha-a depois no pulso."
+        + (quantos ? " " + quantos + (quantos === 1 ? " valor é preenchido" : " valores são preenchidos") + " pelo relógio." : "")
+        + (dados.pintadas.length ? " Ficam pintados: " + dados.pintadas.join(", ") + "." : ""));
       $("#acoesItem").classList.add("escondido");
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
@@ -1390,7 +1462,26 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
   };
 
   // exportar
-  function renderDe(mascara, soEstatico, lado) { const c = document.createElement("canvas"); c.width = c.height = lado || 466; Estudio.desenhar(c, mascara, { estado: { ...estado, data: new Date() }, soEstatico }); return c; }
+  function renderDe(mascara, soEstatico, lado, enfeites) {
+    const c = document.createElement("canvas");
+    c.width = c.height = lado || 466;
+    Estudio.desenhar(c, mascara, { estado: { ...estado, data: new Date() }, soEstatico });
+    // sinais à volta dos valores vivos (o ▮, o ♥, os dois-pontos): esses são
+    // fixos e vão pintados; os algarismos é que o relógio preenche
+    if (enfeites && enfeites.length) {
+      const x = c.getContext("2d");
+      x.save();
+      x.scale(c.width / 466, c.height / 466);
+      x.textAlign = "left"; x.textBaseline = "middle";
+      for (const e of enfeites) {
+        x.font = e.fonte;
+        x.fillStyle = e.camada.cor || "#ffffff";
+        x.fillText(e.texto, e.x, e.y);
+      }
+      x.restore();
+    }
+    return c;
+  }
   function render(soEstatico, lado) { return renderDe(m, soEstatico, lado); }
   function guardarCanvas(c, nome) { const b64 = c.toDataURL("image/png").split(",")[1]; res(N.guardar(nome, b64), "Guardado em Transferências: " + nome); }
   const nomeFicheiro = (s) => (m.nome || "mascara").normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").toLowerCase();

@@ -4,7 +4,7 @@
 O desenho de uma máscara não é XML — é protobuf. Cada elemento é
 {1: índice, 2: tipo, (3+tipo): conteúdo} e, dentro do conteúdo, um campo diz
 "este elemento aparece no ecrã sempre ligado". O número desse campo muda com
-o tipo: imagens 5, dígitos 6, ponteiros 9. (Verificado no relógio do Pedro.)
+o tipo: imagens 5, dígitos 6, valores 13, ponteiros 9, anéis 12.
 
 Uso: sempre_ligado.py ficheiro.hwt [--exigir]
 Com --exigir sai com erro se a máscara não tiver ranhura de sempre ligado —
@@ -12,7 +12,7 @@ Com --exigir sai com erro se a máscara não tiver ranhura de sempre ligado —
 """
 import sys, io, zipfile, struct
 
-CAMPO_AOD = {1: 5, 2: 6, 3: 6, 5: 9, 6: 6}
+CAMPO_AOD = {1: 5, 2: 6, 3: 13, 5: 9, 6: 6, 7: 12}
 
 
 def ler_varint(b, i):
@@ -122,7 +122,7 @@ def ver_mascara(caminho):
     if not els:
         print("  formato antigo: não tem elementos marcáveis, logo não pode ter sempre ligado próprio")
         return False
-    NOMES = {1: "imagem", 2: "dígitos", 3: "números", 5: "ponteiro", 6: "texto"}
+    NOMES = {1: "imagem", 2: "dígitos", 3: "valor", 5: "ponteiro", 6: "texto", 7: "anel"}
     ranhura = None
     marcados = []
     for tipo, indice, conteudo in els:

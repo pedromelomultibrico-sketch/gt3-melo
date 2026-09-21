@@ -292,8 +292,8 @@
   // Cada elemento do mostrador é { 1: índice, 2: tipo, (3+tipo): conteúdo }.
   // Dentro do conteúdo há um campo que diz "este elemento aparece no ecrã
   // sempre ligado". O número desse campo muda com o tipo — imagens 5,
-  // dígitos 6, ponteiros 9. Verificado no relógio a 19/09/2026.
-  const CAMPO_AOD = { 1: 5, 2: 6, 3: 6, 5: 9, 6: 6 };
+  // dígitos 6, valores 13, ponteiros 9, anéis 12. Verificado no relógio.
+  const CAMPO_AOD = { 1: 5, 2: 6, 3: 13, 5: 9, 6: 6, 7: 12 };
 
   function lerVarint(b, i) {
     let v = 0, mul = 1;
@@ -611,6 +611,39 @@
   }
 
   /**
+   * Acrescenta ao desenho um valor que o relógio preenche sozinho — bateria,
+   * passos, horas. `telas` são os dez algarismos já desenhados, no estilo da
+   * camada; `fonte` é o número que diz ao relógio que dado ir buscar (ver
+   * ci/NUMEROS-DO-RELOGIO.md).
+   */
+  function acrescentarValor(pacote, p, arv, opcoes) {
+    let destino = null, indice = 0;
+    varrerElementos(arv, (e) => {
+      if (!destino) destino = { lista: e.lista, campo: e.item.c };
+      indice = Math.max(indice, e.indice);
+    });
+    if (!destino) return false;
+    const nomes = [];
+    for (const tela of opcoes.telas) {
+      const px = tela.getContext("2d").getImageData(0, 0, tela.width, tela.height).data;
+      p.blocos.push(codificarLivre(px, tela.width, tela.height, marcaDe(pacote)));
+      nomes.push(("00" + p.blocos.length).slice(-3));
+    }
+    const vazio = new Uint8Array(0);
+    const conteudo = nomes.map((n) => pbCadeia(1, n)).concat([
+      { c: 2, t: 2, v: vazio },
+      { c: 3, t: 2, filhos: [pbNumero(1, Math.max(0, Math.round(opcoes.x))), pbNumero(2, Math.max(0, Math.round(opcoes.y)))] },
+      pbNumero(4, 1),                      // alinhado pela esquerda, no x dado
+      pbNumero(5, opcoes.fonte),
+      { c: 6, t: 2, v: vazio },
+      pbNumero(7, 0), pbNumero(8, 0),
+      pbNumero(CAMPO_AOD[3], opcoes.aod ? 1 : 0),
+    ]);
+    destino.lista.push({ c: destino.campo, t: 2, filhos: [pbNumero(1, ++indice), pbNumero(2, 3), { c: 6, t: 2, filhos: conteudo }] });
+    return true;
+  }
+
+  /**
    * Onde escrever o ecrã sempre ligado: na ranhura marcada pela própria
    * máscara. Se não houver, avisa que é preciso criar uma.
    */
@@ -651,6 +684,7 @@
       const px = prepararDesenho(t.canvas, im.largura, im.altura, t.transparente);
       p.blocos[im.pos] = codificarLivre(px, im.largura, im.altura, pacote.bin.subarray(im.inicio, im.inicio + 4));
     }
+    for (const v of o.valores || []) if (acrescentarValor(pacote, p, arv, v)) mexeuNoDesenho = true;
     if (o.ponteirosAod && ponteirosAod(pacote, p, arv)) mexeuNoDesenho = true;
     if (mexeuNoDesenho) p.xml = pbBytes(arv);
     return empacotar(pacote, montar(p), nome, capa, 8);
@@ -731,5 +765,5 @@
     return btoa(s);
   }
 
-  window.HWT = { abrir, lerImagens, descodificar, paraDataURL, indiceFundo, indiceAod, construir, codificarExato, codificarLivre, paraBase64, opacidade, riqueza, faceComposta, faceDoDesenho, alvoAod, ranhuraAod, ponteirosAod, criarRanhuraAod, ladoEcra, prepararDesenho, partes, montar, pbArvore, pbBytes, varrerElementos };
+  window.HWT = { abrir, lerImagens, descodificar, paraDataURL, indiceFundo, indiceAod, construir, codificarExato, codificarLivre, paraBase64, opacidade, riqueza, faceComposta, faceDoDesenho, acrescentarValor, alvoAod, ranhuraAod, ponteirosAod, criarRanhuraAod, ladoEcra, prepararDesenho, partes, montar, pbArvore, pbBytes, varrerElementos };
 })();
