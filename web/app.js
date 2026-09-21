@@ -1043,6 +1043,72 @@
   }
 
   /**
+   * Dados que o relógio sabe preencher sozinho, e o número por que os pede.
+   * A tabela toda está em ci/NUMEROS-DO-RELOGIO.md.
+   */
+  const FONTE = { passos: 0, batimentos: 2, bateria: 9, hora: 12, minuto: 13, dia: 17, mes: 24 };
+  /** Camadas do Estúdio que passam a ser preenchidas pelo relógio. */
+  const CAMADAS_VIVAS = {
+    hora: { partes: [{ fonte: FONTE.hora, casas: 2 }, { texto: ":" }, { fonte: FONTE.minuto, casas: 2 }] },
+    data: { partes: [{ fonte: FONTE.dia, casas: 2 }, { texto: "/" }, { fonte: FONTE.mes, casas: 2 }] },
+    bateria: { partes: [{ texto: "▮ " }, { fonte: FONTE.bateria, casas: 2 }, { texto: "%" }] },
+    passos: { partes: [{ texto: "👣 " }, { fonte: FONTE.passos, casas: 4 }] },
+    batimentos: { partes: [{ texto: "♥ " }, { fonte: FONTE.batimentos, casas: 2 }] },
+  };
+
+  /** Os dez algarismos desenhados no estilo da camada, para o relógio os usar. */
+  function algarismosDe(camada) {
+    const fonte = (camada.peso || 400) + " " + camada.tamanho + 'px "' + (camada.fonte || "Inter") + '", sans-serif';
+    const regua = document.createElement("canvas").getContext("2d");
+    regua.font = fonte;
+    let larg = 0;
+    for (let d = 0; d < 10; d++) larg = Math.max(larg, regua.measureText(String(d)).width);
+    larg = Math.ceil(larg) + 4;
+    const alt = Math.ceil(camada.tamanho * 1.4);
+    const telas = [];
+    for (let d = 0; d < 10; d++) {
+      const c = document.createElement("canvas");
+      c.width = larg; c.height = alt;
+      const x = c.getContext("2d");
+      x.font = fonte; x.fillStyle = camada.cor || "#ffffff";
+      x.textAlign = "center"; x.textBaseline = "middle";
+      x.fillText(String(d), larg / 2, alt / 2);
+      telas.push(c);
+    }
+    return { telas, larg, alt, fonte };
+  }
+
+  /**
+   * Prepara os valores vivos de um desenho: devolve o que o relógio vai
+   * preencher e o que fica pintado à volta (os sinais, o ▮, o ♥).
+   * As camadas sem número conhecido — autonomia, dia da semana, ponteiros —
+   * continuam pintadas, e por isso paradas.
+   */
+  function valoresVivos(m) {
+    const vivos = [], enfeites = [], pintadas = [];
+    for (const c of m.camadas) {
+      const receita = CAMADAS_VIVAS[c.tipo];
+      if (!receita) { if (Estudio.DINAMICAS.includes(c.tipo)) pintadas.push(c.tipo); continue; }
+      const a = algarismosDe(c);
+      const regua = document.createElement("canvas").getContext("2d");
+      regua.font = a.fonte;
+      let total = 0;
+      for (const p of receita.partes) total += p.texto ? regua.measureText(p.texto).width : p.casas * a.larg;
+      let x = c.x - total / 2;
+      for (const p of receita.partes) {
+        if (p.texto) {
+          enfeites.push({ texto: p.texto, x: x, y: c.y, camada: c, fonte: a.fonte });
+          x += regua.measureText(p.texto).width;
+        } else {
+          vivos.push({ fonte: p.fonte, x: x, y: c.y - a.alt / 2, telas: a.telas });
+          x += p.casas * a.larg;
+        }
+      }
+    }
+    return { vivos, enfeites, pintadas };
+  }
+
+  /**
    * Instala uma máscara desenhada por mim. Como não é um ficheiro .hwt, o desenho
    * assenta numa máscara base — a habitual, ou a que vem com a app.
    */
