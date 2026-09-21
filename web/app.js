@@ -1141,8 +1141,9 @@
       const b64 = HWT.paraBase64(feito.bytes);
       const suave = mostrador.receita.suave || 0;
       res(N.instalar((item.nome || "mascara") + ".hwt", b64),
-        "Enviada. Escolha-a depois no pulso. Os ponteiros e números são os da " + base.item.nome + "."
-        + (suave ? " O desenho foi suavizado " + suave + "px para caber." : ""));
+        "Enviada. Escolha-a depois no pulso."
+        + (quantos ? " " + quantos + (quantos === 1 ? " valor é preenchido" : " valores são preenchidos") + " pelo relógio." : "")
+        + (dados.pintadas.length ? " Ficam pintados: " + dados.pintadas.join(", ") + "." : ""));
       $("#acoesItem").classList.add("escondido");
     } catch (e) { toast("⚠ " + e.message); } finally { carregar(false); }
   }
