@@ -122,7 +122,7 @@ def ver_mascara(caminho):
     if not els:
         print("  formato antigo: não tem elementos marcáveis, logo não pode ter sempre ligado próprio")
         return False
-    NOMES = {1: "imagem", 2: "dígitos", 3: "números", 5: "ponteiro", 6: "texto"}
+    NOMES = {1: "imagem", 2: "dígitos", 3: "valor", 5: "ponteiro", 6: "texto", 7: "anel"}
     ranhura = None
     marcados = []
     for tipo, indice, conteudo in els:
