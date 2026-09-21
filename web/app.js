@@ -1462,7 +1462,26 @@ O mostrador é redondo, 466x466, centro em 233,233. "tamanho" é o corpo da letr
   };
 
   // exportar
-  function renderDe(mascara, soEstatico, lado) { const c = document.createElement("canvas"); c.width = c.height = lado || 466; Estudio.desenhar(c, mascara, { estado: { ...estado, data: new Date() }, soEstatico }); return c; }
+  function renderDe(mascara, soEstatico, lado, enfeites) {
+    const c = document.createElement("canvas");
+    c.width = c.height = lado || 466;
+    Estudio.desenhar(c, mascara, { estado: { ...estado, data: new Date() }, soEstatico });
+    // sinais à volta dos valores vivos (o ▮, o ♥, os dois-pontos): esses são
+    // fixos e vão pintados; os algarismos é que o relógio preenche
+    if (enfeites && enfeites.length) {
+      const x = c.getContext("2d");
+      x.save();
+      x.scale(c.width / 466, c.height / 466);
+      x.textAlign = "left"; x.textBaseline = "middle";
+      for (const e of enfeites) {
+        x.font = e.fonte;
+        x.fillStyle = e.camada.cor || "#ffffff";
+        x.fillText(e.texto, e.x, e.y);
+      }
+      x.restore();
+    }
+    return c;
+  }
   function render(soEstatico, lado) { return renderDe(m, soEstatico, lado); }
   function guardarCanvas(c, nome) { const b64 = c.toDataURL("image/png").split(",")[1]; res(N.guardar(nome, b64), "Guardado em Transferências: " + nome); }
   const nomeFicheiro = (s) => (m.nome || "mascara").normalize("NFD").replace(/[^\w]+/g, "-").replace(/^-|-$/g, "").toLowerCase();
