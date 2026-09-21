@@ -4,7 +4,7 @@
 O desenho de uma máscara não é XML — é protobuf. Cada elemento é
 {1: índice, 2: tipo, (3+tipo): conteúdo} e, dentro do conteúdo, um campo diz
 "este elemento aparece no ecrã sempre ligado". O número desse campo muda com
-o tipo: imagens 5, dígitos 6, ponteiros 9. (Verificado no relógio do Pedro.)
+o tipo: imagens 5, dígitos 6, valores 13, ponteiros 9, anéis 12.
 
 Uso: sempre_ligado.py ficheiro.hwt [--exigir]
 Com --exigir sai com erro se a máscara não tiver ranhura de sempre ligado —
