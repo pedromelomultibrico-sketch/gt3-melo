@@ -340,6 +340,29 @@ public class PonteNucleo {
         }
     }
 
+    /** Estado do vigia da ligação, para a interface poder mostrar o interruptor. */
+    @JavascriptInterface
+    public String vigia() {
+        try {
+            return new JSONObject().put("ok", true)
+                    .put("ligado", MeloVigia.ligado(act)).toString();
+        } catch (Exception e) {
+            return erro(e);
+        }
+    }
+
+    /** Liga ou desliga a religação automática. */
+    @JavascriptInterface
+    public String vigiaLigar(boolean ligar) {
+        try {
+            MeloVigia.definirLigado(act, ligar);
+            if (ligar) MeloVigia.tentarLigar(act);
+            return new JSONObject().put("ok", true).put("ligado", ligar).toString();
+        } catch (Exception e) {
+            return erro(e);
+        }
+    }
+
     @JavascriptInterface
     public String sincronizar() {
         try {
