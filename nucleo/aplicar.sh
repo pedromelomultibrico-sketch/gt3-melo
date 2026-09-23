@@ -122,7 +122,26 @@ if ini > 0 and fim > ini:
     fim = s.find('</intent-filter>', fim) + len('</intent-filter>')
     s = s[:ini] + s[fim:]
 s = s.replace('<activity\n            android:name=".activities.ControlCenterv2"', nova, 1)
-assert s != antes and '.melo.MeloActivity' in s, "manifesto não alterado"
+# O vigia da ligacao. Tem de ficar no MANIFESTO e nao em memoria: os recetores
+# que o Gadgetbridge regista sozinho morrem com o servico, e e precisamente
+# quando o servico morre que o relogio fica desligado sem ninguem o religar.
+vigia = '''
+        <receiver
+            android:name=".melo.MeloVigia"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+                <action android:name="android.bluetooth.adapter.action.STATE_CHANGED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="ao.melo.gt3.VIGIA" />
+            </intent-filter>
+        </receiver>
+'''
+assert s.count('</application>') == 1, "nao sei onde por o vigia"
+s = s.replace('</application>', vigia + '    </application>', 1)
+assert s != antes and '.melo.MeloActivity' in s and '.melo.MeloVigia' in s, "manifesto não alterado"
 open(p, "w").write(s)
 PY
 
