@@ -120,6 +120,14 @@ public class MeloActivity extends Activity {
         carregar();
         tratarIntent(getIntent());
 
+        // O vigia marca a próxima ronda e, se o relógio estiver caído, liga já.
+        // Abrir a app é sempre uma boa altura para repor isto: se o Android
+        // tiver limpado os alarmes, ficam outra vez de pé.
+        try {
+            MeloVigia.agendar(this);
+            MeloVigia.tentarLigar(this);
+        } catch (Exception ignored) { }
+
         SharedPreferences prefs = GBApplication.getPrefs().getPreferences();
         if (prefs.getBoolean("first_run", true)) {
             startActivity(new Intent(this, WelcomeActivity.class));
