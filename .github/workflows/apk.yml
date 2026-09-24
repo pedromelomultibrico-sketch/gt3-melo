@@ -1,6 +1,21 @@
 name: Construir GT3 Melo
+
+# POR QUE EXISTE O RELOGIO AQUI.
+# O GitHub ignora qualquer push cuja mensagem leve "[skip ci]". Essa marca foi
+# posta de proposito nos commits do conector, para nao queimar creditos do
+# Netlify no outro projeto — mas o mesmo conector grava aqui, e o resultado era
+# este: gravava-se o codigo novo e a compilacao nunca arrancava, sem dar erro
+# nenhum. Ficou o APK parado na 1.7 com o codigo novo ja no repositorio.
+#
+# A marca "[skip ci]" so trava os eventos push. Nao trava o relogio (schedule)
+# nem o arranque a mao (workflow_dispatch). Por isso fica aqui um relogio a
+# passar de meia em meia hora durante o dia, com uma guarda a frente: se nada
+# mudou na pasta nucleo desde a ultima compilacao, sai em segundos e nao gasta
+# praticamente nada. So compila mesmo quando ha codigo novo.
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "*/30 5-19 * * *"
   push:
     branches: [main]
     paths:
@@ -12,7 +27,36 @@ concurrency:
   group: apk
   cancel-in-progress: true
 jobs:
+  # Guarda barata: decide se vale a pena acordar a compilacao.
+  verificar:
+    runs-on: ubuntu-latest
+    outputs:
+      precisa: ${{ steps.g.outputs.precisa }}
+      sha: ${{ steps.g.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: g
+        name: Ha codigo novo por compilar?
+        run: |
+          # O proprio ficheiro .construido vive dentro de nucleo/, por isso e
+          # excluido da conta — senao a compilacao dava a si mesma razao para
+          # voltar a correr, para sempre.
+          SHA=$(git log -1 --format=%H -- nucleo ':!nucleo/.construido')
+          FEITO=$(tr -d '[:space:]' < nucleo/.construido 2>/dev/null || echo "")
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+          if [ "$SHA" = "$FEITO" ]; then
+            echo "Nada mudou desde a ultima compilacao ($SHA). Nao ha nada a fazer."
+            echo "precisa=nao" >> $GITHUB_OUTPUT
+          else
+            echo "Codigo novo: $SHA (ultimo compilado: ${FEITO:-nenhum})."
+            echo "precisa=sim" >> $GITHUB_OUTPUT
+          fi
+
   apk:
+    needs: verificar
+    if: needs.verificar.outputs.precisa == 'sim'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -57,15 +101,16 @@ jobs:
           body: Descarregue o GT3-Melo.apk no telemóvel e instale.
           files: GT3-Melo.apk
           make_latest: true
-      - name: Atualizar versao.json
+      - name: Atualizar versao.json e marcar como compilado
         run: |
           N=${{ github.run_number }}
           cat > versao.json <<EOF
           {"versaoCodigo": $((1000 + N)), "versaoNome": "1.$N", "apk": "https://github.com/${{ github.repository }}/releases/download/v1.$N/GT3-Melo.apk", "data": "$(date -u +%FT%TZ)"}
           EOF
+          echo "${{ needs.verificar.outputs.sha }}" > nucleo/.construido
           git config user.name "GT3 Melo CI"
           git config user.email "ci@gt3melo.local"
-          git add versao.json
+          git add versao.json nucleo/.construido
           git commit -m "versao 1.$N [skip ci]"
           git pull --rebase origin main
           git push
