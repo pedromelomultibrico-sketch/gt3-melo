@@ -158,4 +158,34 @@ done
 rm -f "$GB/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" "$GB/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml"
 rm -f "$GB"/app/src/mainline/res/mipmap-anydpi*/ic_launcher*.xml 2>/dev/null || true
 
+# 6) Avisos em segundo plano: permissões, serviço com aviso fixo e ecrã da chave
+python3 - "$M" <<'PY'
+import sys
+p = sys.argv[1]; s = open(p).read()
+perm = '''    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+'''
+assert s.count('<application') == 1, "nao sei onde por as permissoes"
+s = s.replace('<application', perm + '    <application', 1)
+svc = '''
+        <service
+            android:name=".melo.MeloAvisos"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+        <activity
+            android:name=".melo.MeloChaveActivity"
+            android:label="Chave dos avisos"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    '''
+assert s.count('</application>') == 1, "nao sei onde por os avisos"
+s = s.replace('</application>', svc + '</application>', 1)
+open(p, "w").write(s)
+PY
+
 echo "GT3 Melo aplicado (versão 1.$N)"
