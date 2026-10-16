@@ -56,7 +56,8 @@ public class MeloVigia extends BroadcastReceiver {
             // Volta sempre a marcar a próxima ronda, seja qual for o motivo
             // desta. Se falhasse uma, o vigia adormecia para sempre.
             agendar(ctx);
-            if (!ligado(ctx)) return;
+            MeloAvisos.iniciar(ctx);
+              if (!ligado(ctx)) return;
             BluetoothAdapter bt = BluetoothAdapter.getDefaultAdapter();
             if (bt == null || !bt.isEnabled()) return;
             tentarLigar(ctx);
