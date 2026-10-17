@@ -188,4 +188,77 @@ s = s.replace('</application>', svc + '</application>', 1)
 open(p, "w").write(s)
 PY
 
+# 7) Chamadas de apps (VoIP, ex.: despertador do Jarvis): o Gadgetbridge leva a
+#    chamada ao relógio, mas Atender/Recusar no pulso só sabiam mexer em chamadas
+#    telefónicas. Guarda-se a última notificação de chamada de app e, quando o
+#    relógio manda atender/recusar, carrega-se no botão certo dessa notificação.
+NL="$GB/app/src/main/java/nodomain/freeyourgadget/gadgetbridge/externalevents/NotificationListener.java"
+CR="$GB/app/src/main/java/nodomain/freeyourgadget/gadgetbridge/service/receivers/GBCallControlReceiver.java"
+python3 - "$NL" "$CR" <<'PY'
+import sys
+nl, cr = sys.argv[1], sys.argv[2]
+s = open(nl).read()
+cab = "public class NotificationListener extends NotificationListenerService {"
+assert cab in s, "nao encontrei a classe NotificationListener"
+s = s.replace(cab, cab + "\n    public static volatile StatusBarNotification meloChamadaVoip = null;", 1)
+ent = "    private void handleCallNotification(StatusBarNotification sbn) {\n"
+assert ent in s, "nao encontrei handleCallNotification"
+s = s.replace(ent, ent + "        meloChamadaVoip = PHONE_CALL_APPS.contains(sbn.getPackageName()) ? null : sbn;\n", 1)
+fim = "            activeCallPostTime = 0;\n"
+assert fim in s, "nao encontrei o fim da chamada"
+s = s.replace(fim, fim + "            meloChamadaVoip = null;\n", 1)
+open(nl, "w").write(s)
+
+c = open(cr).read()
+log = '        LOG.debug("Got call control event: {}", callCmd);\n'
+assert log in c, "nao encontrei o onReceive do GBCallControlReceiver"
+c = c.replace(log, log + "        if (meloVoip(callCmd)) return;\n", 1)
+metodo = '''    // GT3 Melo: atender/recusar uma chamada de app (VoIP) a partir do relogio.
+    private boolean meloVoip(GBDeviceEventCallControl.Event cmd) {
+        try {
+            android.service.notification.StatusBarNotification sbn =
+                    nodomain.freeyourgadget.gadgetbridge.externalevents.NotificationListener.meloChamadaVoip;
+            if (sbn == null) return false;
+            final boolean aceitar = cmd == GBDeviceEventCallControl.Event.ACCEPT || cmd == GBDeviceEventCallControl.Event.START;
+            final boolean recusar = cmd == GBDeviceEventCallControl.Event.REJECT || cmd == GBDeviceEventCallControl.Event.END;
+            if (!aceitar && !recusar) return false;
+            final android.app.Notification n = sbn.getNotification();
+            android.app.PendingIntent pi = null;
+            if (Build.VERSION.SDK_INT >= 31 && n.extras != null) {
+                pi = n.extras.getParcelable(aceitar ? android.app.Notification.EXTRA_ANSWER_INTENT : android.app.Notification.EXTRA_DECLINE_INTENT);
+                if (pi == null && recusar) pi = n.extras.getParcelable(android.app.Notification.EXTRA_HANG_UP_INTENT);
+            }
+            if (pi == null && n.actions != null) {
+                for (android.app.Notification.Action a : n.actions) {
+                    final String t = String.valueOf(a.title).toLowerCase(java.util.Locale.ROOT);
+                    final boolean bate = aceitar
+                            ? (t.contains("atender") || t.contains("answer") || t.contains("aceitar") || t.contains("accept"))
+                            : (t.contains("recusar") || t.contains("rejeitar") || t.contains("decline") || t.contains("reject") || t.contains("desligar") || t.contains("terminar") || t.contains("hang"));
+                    if (bate) { pi = a.actionIntent; break; }
+                }
+            }
+            if (pi == null) return false;
+            if (Build.VERSION.SDK_INT >= 34) {
+                final android.app.ActivityOptions o = android.app.ActivityOptions.makeBasic();
+                o.setPendingIntentBackgroundActivityStartMode(android.app.ActivityOptions.MODE_BACKGROUND_ACTIVITY_START_ALLOWED);
+                pi.send(mContext, 0, null, null, null, null, o.toBundle());
+            } else {
+                pi.send();
+            }
+            LOG.info("GT3 Melo: chamada de app {} pelo relogio", aceitar ? "atendida" : "recusada");
+            if (recusar) nodomain.freeyourgadget.gadgetbridge.externalevents.NotificationListener.meloChamadaVoip = null;
+            return true;
+        } catch (Exception e) {
+            LOG.warn("GT3 Melo: nao consegui tratar a chamada de app", e);
+            return false;
+        }
+    }
+
+'''
+ancora = "    @RequiresApi(api = Build.VERSION_CODES.P)\n    public void handleCallCmdTelecomManager"
+assert ancora in c, "nao encontrei handleCallCmdTelecomManager"
+c = c.replace(ancora, metodo + ancora, 1)
+open(cr, "w").write(c)
+PY
+
 echo "GT3 Melo aplicado (versão 1.$N)"
