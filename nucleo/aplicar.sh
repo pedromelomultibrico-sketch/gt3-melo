@@ -203,7 +203,11 @@ assert cab in s, "nao encontrei a classe NotificationListener"
 s = s.replace(cab, cab + "\n    public static volatile StatusBarNotification meloChamadaVoip = null;", 1)
 ent = "    private void handleCallNotification(StatusBarNotification sbn) {\n"
 assert ent in s, "nao encontrei handleCallNotification"
-s = s.replace(ent, ent + "        meloChamadaVoip = PHONE_CALL_APPS.contains(sbn.getPackageName()) ? null : sbn;\n", 1)
+s = s.replace(ent, ent + "        meloChamadaVoip = PHONE_CALL_APPS.contains(sbn.getPackageName()) ? null : sbn;\n" + '''        try {
+            final android.app.Notification mn = sbn.getNotification();
+            nodomain.freeyourgadget.gadgetbridge.melo.MeloDiag.enviar("voip-chamada", "pkg=" + sbn.getPackageName() + " cat=" + mn.category + " acoes=" + (mn.actions == null ? 0 : mn.actions.length) + " extras=" + (mn.extras == null ? "-" : mn.extras.keySet().toString()));
+        } catch (Exception meloE) { }
+''', 1)
 fim = "            activeCallPostTime = 0;\n"
 assert fim in s, "nao encontrei o fim da chamada"
 s = s.replace(fim, fim + "            meloChamadaVoip = null;\n", 1)
