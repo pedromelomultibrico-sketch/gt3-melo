@@ -216,7 +216,12 @@ open(nl, "w").write(s)
 c = open(cr).read()
 log = '        LOG.debug("Got call control event: {}", callCmd);\n'
 assert log in c, "nao encontrei o onReceive do GBCallControlReceiver"
-c = c.replace(log, log + "        if (meloVoip(callCmd)) return;\n", 1)
+c = c.replace(log, log + '''        nodomain.freeyourgadget.gadgetbridge.melo.MeloDiag.enviar("voip-controlo", "cmd=" + callCmd + " chamada=" + (nodomain.freeyourgadget.gadgetbridge.externalevents.NotificationListener.meloChamadaVoip != null));
+        if (meloVoip(callCmd)) return;
+''', 1)
+c = c.replace("            if (pi == null) return false;\n            if (Build.VERSION.SDK_INT >= 34) {", '''            nodomain.freeyourgadget.gadgetbridge.melo.MeloDiag.enviar("voip-resultado", "cmd=" + cmd + " intent=" + (pi != null) + " sdk=" + Build.VERSION.SDK_INT);
+            if (pi == null) return false;
+            if (Build.VERSION.SDK_INT >= 34) {''', 1) if False else c
 metodo = '''    // GT3 Melo: atender/recusar uma chamada de app (VoIP) a partir do relogio.
     private boolean meloVoip(GBDeviceEventCallControl.Event cmd) {
         try {
