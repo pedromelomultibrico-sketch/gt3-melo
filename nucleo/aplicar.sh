@@ -246,6 +246,7 @@ metodo = '''    // GT3 Melo: atender/recusar uma chamada de app (VoIP) a partir 
                     if (bate) { pi = a.actionIntent; break; }
                 }
             }
+            nodomain.freeyourgadget.gadgetbridge.melo.MeloDiag.enviar("voip-resultado", "cmd=" + cmd + " intent=" + (pi != null) + " sdk=" + Build.VERSION.SDK_INT + " extras=" + (n.extras == null ? "-" : n.extras.keySet().toString()));
             if (pi == null) return false;
             if (Build.VERSION.SDK_INT >= 34) {
                 final android.app.ActivityOptions o = android.app.ActivityOptions.makeBasic();
@@ -254,10 +255,12 @@ metodo = '''    // GT3 Melo: atender/recusar uma chamada de app (VoIP) a partir 
             } else {
                 pi.send();
             }
+            nodomain.freeyourgadget.gadgetbridge.melo.MeloDiag.enviar("voip-enviado", "cmd=" + cmd + " ok");
             LOG.info("GT3 Melo: chamada de app {} pelo relogio", aceitar ? "atendida" : "recusada");
             if (recusar) nodomain.freeyourgadget.gadgetbridge.externalevents.NotificationListener.meloChamadaVoip = null;
             return true;
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            nodomain.freeyourgadget.gadgetbridge.melo.MeloDiag.enviar("voip-erro", String.valueOf(e));
             LOG.warn("GT3 Melo: nao consegui tratar a chamada de app", e);
             return false;
         }
