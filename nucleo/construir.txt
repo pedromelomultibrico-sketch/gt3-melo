@@ -4,3 +4,4 @@ Marca para arrancar a compilacao do APK.
 24/09/2026 - vigia da ligacao: religa o relogio sozinho quando a ligacao cai.
 17/10/2026 - chamadas de apps (Jarvis): Atender e Recusar no relogio passam a funcionar.
 17/10/2026 - chamadas de apps: diagnostico enviado ao Worker (log:voip-*).
+17/10/2026 - chamadas de apps: diagnostico da resposta do relogio (log:voip-relogio, log:voip-evento).
