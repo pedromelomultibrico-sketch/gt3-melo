@@ -3,3 +3,4 @@ Marca para arrancar a compilacao do APK.
 19/09/2026 - definicoes do relogio: faltava o MENU_ENTRY_POINT e o ecra rebentava.
 24/09/2026 - vigia da ligacao: religa o relogio sozinho quando a ligacao cai.
 17/10/2026 - chamadas de apps (Jarvis): Atender e Recusar no relogio passam a funcionar.
+17/10/2026 - chamadas de apps: diagnostico enviado ao Worker (log:voip-*).
