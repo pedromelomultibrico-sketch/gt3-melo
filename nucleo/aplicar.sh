@@ -273,4 +273,24 @@ c = c.replace(ancora, metodo + ancora, 1)
 open(cr, "w").write(c)
 PY
 
+# 8) Diagnóstico: o que o relógio responde quando se carrega em Atender/Recusar.
+AR="$GB/app/src/main/java/nodomain/freeyourgadget/gadgetbridge/service/devices/huawei/AsynchronousResponse.java"
+EV="$GB/app/src/main/java/nodomain/freeyourgadget/gadgetbridge/deviceevents/GBDeviceEventCallControl.java"
+python3 - "$AR" "$EV" <<'PY'
+import sys
+ar, ev = sys.argv[1], sys.argv[2]
+a = open(ar).read()
+sw = "            switch (((Calls.AnswerCallResponse) response).action) {\n"
+assert sw in a, "nao encontrei o switch das chamadas no Huawei"
+a = a.replace(sw, '''            nodomain.freeyourgadget.gadgetbridge.melo.MeloDiag.enviar("voip-relogio", "acao=" + ((Calls.AnswerCallResponse) response).action);
+''' + sw, 1)
+open(ar, "w").write(a)
+e = open(ev).read()
+ini = '        LOG.info("Got event for CALL_CONTROL");\n'
+assert ini in e, "nao encontrei o evaluate do GBDeviceEventCallControl"
+e = e.replace(ini, ini + '''        nodomain.freeyourgadget.gadgetbridge.melo.MeloDiag.enviar("voip-evento", "evento=" + event);
+''', 1)
+open(ev, "w").write(e)
+PY
+
 echo "GT3 Melo aplicado (versão 1.$N)"
